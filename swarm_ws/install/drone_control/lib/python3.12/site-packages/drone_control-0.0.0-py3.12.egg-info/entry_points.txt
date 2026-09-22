@@ -1,0 +1,4 @@
+[console_scripts]
+autonomous_script = drone_control.autonomous_script:main
+frontier_exploration = drone_control.frontier_exploration:main
+teleop_node = drone_control.teleop_node:main

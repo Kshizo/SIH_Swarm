@@ -1,0 +1,69 @@
+[0.370s] Invoking command in '/home/atharv/swarm_ws/build/rf2o_laser_odometry': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/atharv/swarm_ws/src/rf2o_laser_odometry -DCMAKE_INSTALL_PREFIX=/home/atharv/swarm_ws/install/rf2o_laser_odometry
+[0.531s] -- The C compiler identification is GNU 13.3.0
+[0.637s] -- The CXX compiler identification is GNU 13.3.0
+[0.654s] -- Detecting C compiler ABI info
+[0.732s] -- Detecting C compiler ABI info - done
+[0.737s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.738s] -- Detecting C compile features
+[0.738s] -- Detecting C compile features - done
+[0.746s] -- Detecting CXX compiler ABI info
+[0.825s] -- Detecting CXX compiler ABI info - done
+[0.834s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.834s] -- Detecting CXX compile features
+[0.834s] -- Detecting CXX compile features - done
+[0.842s] -- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.975s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.130s] -- Found rclcpp: 28.1.21 (/opt/ros/jazzy/share/rclcpp/cmake)
+[1.176s] -- Found rosidl_generator_c: 4.6.9 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[1.188s] -- Found rosidl_generator_cpp: 4.6.9 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[1.214s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.238s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.308s] -- Found rmw_implementation_cmake: 7.3.3 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[1.311s] -- Found rmw_fastrtps_cpp: 8.4.4 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[1.390s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+[1.408s] -- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+[1.426s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[1.492s] -- Found std_msgs: 5.3.8 (/opt/ros/jazzy/share/std_msgs/cmake)
+[1.505s] -- Found geometry_msgs: 5.3.8 (/opt/ros/jazzy/share/geometry_msgs/cmake)
+[1.519s] -- Found tf2_geometry_msgs: 0.36.21 (/opt/ros/jazzy/share/tf2_geometry_msgs/cmake)
+[1.534s] -- Found eigen3_cmake_module: 0.3.1 (/opt/ros/jazzy/share/eigen3_cmake_module/cmake)
+[1.535s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[1.535s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[1.648s] -- Found sensor_msgs: 5.3.8 (/opt/ros/jazzy/share/sensor_msgs/cmake)
+[1.667s] -- Found nav_msgs: 5.3.8 (/opt/ros/jazzy/share/nav_msgs/cmake)
+[1.696s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found version "1.83.0")  
+[1.758s] -- Configuring done (1.4s)
+[1.770s] -- Generating done (0.0s)
+[1.775s] -- Build files have been written to: /home/atharv/swarm_ws/build/rf2o_laser_odometry
+[1.782s] Invoked command in '/home/atharv/swarm_ws/build/rf2o_laser_odometry' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/atharv/swarm_ws/src/rf2o_laser_odometry -DCMAKE_INSTALL_PREFIX=/home/atharv/swarm_ws/install/rf2o_laser_odometry
+[1.783s] Invoking command in '/home/atharv/swarm_ws/build/rf2o_laser_odometry': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/atharv/swarm_ws/build/rf2o_laser_odometry -- -j12 -l12
+[1.825s] [ 20%] [32mBuilding CXX object CMakeFiles/rf2o_laser_odometry.dir/src/CLaserOdometry2D.cpp.o[0m
+[1.826s] [ 60%] [32mBuilding CXX object CMakeFiles/rf2o_laser_odometry_node.dir/src/CLaserOdometry2DNode.cpp.o[0m
+[1.826s] [ 60%] [32mBuilding CXX object CMakeFiles/rf2o_laser_odometry_node.dir/src/CLaserOdometry2D.cpp.o[0m
+[14.558s] [ 80%] [32m[1mLinking CXX static library librf2o_laser_odometry.a[0m
+[14.609s] [100%] [32m[1mLinking CXX executable rf2o_laser_odometry_node[0m
+[14.939s] [100%] Built target rf2o_laser_odometry
+[15.418s] [100%] Built target rf2o_laser_odometry_node
+[15.426s] Invoked command in '/home/atharv/swarm_ws/build/rf2o_laser_odometry' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/atharv/swarm_ws/build/rf2o_laser_odometry -- -j12 -l12
+[15.433s] Invoking command in '/home/atharv/swarm_ws/build/rf2o_laser_odometry': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/atharv/swarm_ws/build/rf2o_laser_odometry
+[15.438s] -- Install configuration: ""
+[15.439s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/lib/rf2o_laser_odometry/rf2o_laser_odometry_node
+[15.446s] -- Set non-toolchain portion of runtime path of "/home/atharv/swarm_ws/install/rf2o_laser_odometry/lib/rf2o_laser_odometry/rf2o_laser_odometry_node" to ""
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/launch
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/launch/rf2o_laser_odometry.launch.py
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/ament_index/resource_index/package_run_dependencies/rf2o_laser_odometry
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/ament_index/resource_index/parent_prefix_path/rf2o_laser_odometry
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/environment/ament_prefix_path.sh
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/environment/ament_prefix_path.dsv
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/environment/path.sh
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/environment/path.dsv
+[15.446s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/local_setup.bash
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/local_setup.sh
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/local_setup.zsh
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/local_setup.dsv
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/package.dsv
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/ament_index/resource_index/packages/rf2o_laser_odometry
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/cmake/rf2o_laser_odometryConfig.cmake
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/cmake/rf2o_laser_odometryConfig-version.cmake
+[15.447s] -- Installing: /home/atharv/swarm_ws/install/rf2o_laser_odometry/share/rf2o_laser_odometry/package.xml
+[15.448s] Invoked command in '/home/atharv/swarm_ws/build/rf2o_laser_odometry' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/atharv/swarm_ws/build/rf2o_laser_odometry

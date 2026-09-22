@@ -1,0 +1,37 @@
+running egg_info
+creating ../../build/ssd_lite_ros/ssd_lite_ros.egg-info
+writing ../../build/ssd_lite_ros/ssd_lite_ros.egg-info/PKG-INFO
+writing dependency_links to ../../build/ssd_lite_ros/ssd_lite_ros.egg-info/dependency_links.txt
+writing entry points to ../../build/ssd_lite_ros/ssd_lite_ros.egg-info/entry_points.txt
+writing requirements to ../../build/ssd_lite_ros/ssd_lite_ros.egg-info/requires.txt
+writing top-level names to ../../build/ssd_lite_ros/ssd_lite_ros.egg-info/top_level.txt
+writing manifest file '../../build/ssd_lite_ros/ssd_lite_ros.egg-info/SOURCES.txt'
+reading manifest file '../../build/ssd_lite_ros/ssd_lite_ros.egg-info/SOURCES.txt'
+writing manifest file '../../build/ssd_lite_ros/ssd_lite_ros.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/atharv/swarm_ws/build/ssd_lite_ros/build/lib/ssd_lite_ros
+copying ssd_lite_ros/__init__.py -> /home/atharv/swarm_ws/build/ssd_lite_ros/build/lib/ssd_lite_ros
+copying ssd_lite_ros/camera_publisher.py -> /home/atharv/swarm_ws/build/ssd_lite_ros/build/lib/ssd_lite_ros
+copying ssd_lite_ros/person_detector.py -> /home/atharv/swarm_ws/build/ssd_lite_ros/build/lib/ssd_lite_ros
+running install
+running install_lib
+creating /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros
+copying /home/atharv/swarm_ws/build/ssd_lite_ros/build/lib/ssd_lite_ros/__init__.py -> /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros
+copying /home/atharv/swarm_ws/build/ssd_lite_ros/build/lib/ssd_lite_ros/camera_publisher.py -> /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros
+copying /home/atharv/swarm_ws/build/ssd_lite_ros/build/lib/ssd_lite_ros/person_detector.py -> /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros
+byte-compiling /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros/__init__.py to __init__.cpython-312.pyc
+byte-compiling /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros/camera_publisher.py to camera_publisher.cpython-312.pyc
+byte-compiling /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros/person_detector.py to person_detector.cpython-312.pyc
+running install_data
+creating /home/atharv/swarm_ws/install/ssd_lite_ros/share/ament_index/resource_index/packages
+copying resource/ssd_lite_ros -> /home/atharv/swarm_ws/install/ssd_lite_ros/share/ament_index/resource_index/packages
+copying package.xml -> /home/atharv/swarm_ws/install/ssd_lite_ros/share/ssd_lite_ros
+creating /home/atharv/swarm_ws/install/ssd_lite_ros/share/ssd_lite_ros/models
+copying models/detect.tflite -> /home/atharv/swarm_ws/install/ssd_lite_ros/share/ssd_lite_ros/models
+running install_egg_info
+Copying ../../build/ssd_lite_ros/ssd_lite_ros.egg-info to /home/atharv/swarm_ws/install/ssd_lite_ros/lib/python3.12/site-packages/ssd_lite_ros-0.0.0-py3.12.egg-info
+running install_scripts
+Installing camera_publisher script to /home/atharv/swarm_ws/install/ssd_lite_ros/lib/ssd_lite_ros
+Installing person_detector script to /home/atharv/swarm_ws/install/ssd_lite_ros/lib/ssd_lite_ros
+writing list of installed files to '/home/atharv/swarm_ws/build/ssd_lite_ros/install.log'

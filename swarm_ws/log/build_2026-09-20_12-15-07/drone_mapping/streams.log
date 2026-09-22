@@ -1,0 +1,48 @@
+[0.925s] Invoking command in '/home/atharv/swarm_ws/src/drone_mapping': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/atharv/swarm_ws/build/drone_mapping/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/drone_mapping build --build-base /home/atharv/swarm_ws/build/drone_mapping/build install --record /home/atharv/swarm_ws/build/drone_mapping/install.log --install-scripts $base/lib/drone_mapping --single-version-externally-managed install_data
+[1.111s] running egg_info
+[1.124s] creating ../../build/drone_mapping/drone_mapping.egg-info
+[1.125s] writing ../../build/drone_mapping/drone_mapping.egg-info/PKG-INFO
+[1.125s] writing dependency_links to ../../build/drone_mapping/drone_mapping.egg-info/dependency_links.txt
+[1.125s] writing entry points to ../../build/drone_mapping/drone_mapping.egg-info/entry_points.txt
+[1.125s] writing requirements to ../../build/drone_mapping/drone_mapping.egg-info/requires.txt
+[1.125s] writing top-level names to ../../build/drone_mapping/drone_mapping.egg-info/top_level.txt
+[1.125s] writing manifest file '../../build/drone_mapping/drone_mapping.egg-info/SOURCES.txt'
+[1.152s] reading manifest file '../../build/drone_mapping/drone_mapping.egg-info/SOURCES.txt'
+[1.153s] writing manifest file '../../build/drone_mapping/drone_mapping.egg-info/SOURCES.txt'
+[1.153s] running build
+[1.153s] running build_py
+[1.153s] creating /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping
+[1.153s] copying drone_mapping/pose_to_tf.py -> /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping
+[1.153s] copying drone_mapping/__init__.py -> /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping
+[1.154s] copying drone_mapping/vio_to_ardupilot.py -> /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping
+[1.154s] copying drone_mapping/optical_flow.py -> /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping
+[1.154s] running install
+[1.156s] running install_lib
+[1.170s] creating /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping
+[1.170s] copying /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping/pose_to_tf.py -> /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping
+[1.170s] copying /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping/__init__.py -> /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping
+[1.170s] copying /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping/vio_to_ardupilot.py -> /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping
+[1.170s] copying /home/atharv/swarm_ws/build/drone_mapping/build/lib/drone_mapping/optical_flow.py -> /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping
+[1.171s] byte-compiling /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping/pose_to_tf.py to pose_to_tf.cpython-312.pyc
+[1.171s] byte-compiling /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping/__init__.py to __init__.cpython-312.pyc
+[1.171s] byte-compiling /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping/vio_to_ardupilot.py to vio_to_ardupilot.cpython-312.pyc
+[1.172s] byte-compiling /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping/optical_flow.py to optical_flow.cpython-312.pyc
+[1.173s] running install_data
+[1.173s] creating /home/atharv/swarm_ws/install/drone_mapping/share/ament_index/resource_index/packages
+[1.173s] copying resource/drone_mapping -> /home/atharv/swarm_ws/install/drone_mapping/share/ament_index/resource_index/packages
+[1.174s] copying package.xml -> /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping
+[1.174s] creating /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping/launch
+[1.174s] copying launch/slam_mapping.launch.py -> /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping/launch
+[1.174s] creating /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping/urdf
+[1.174s] copying urdf/drone.urdf -> /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping/urdf
+[1.174s] creating /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping/config
+[1.174s] copying config/mapper_params_online_async.yaml -> /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping/config
+[1.174s] copying config/ekf.yaml -> /home/atharv/swarm_ws/install/drone_mapping/share/drone_mapping/config
+[1.174s] running install_egg_info
+[1.188s] Copying ../../build/drone_mapping/drone_mapping.egg-info to /home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages/drone_mapping-0.0.0-py3.12.egg-info
+[1.189s] running install_scripts
+[1.217s] Installing optical_flow script to /home/atharv/swarm_ws/install/drone_mapping/lib/drone_mapping
+[1.217s] Installing pose_to_tf script to /home/atharv/swarm_ws/install/drone_mapping/lib/drone_mapping
+[1.217s] Installing vio_to_ardupilot script to /home/atharv/swarm_ws/install/drone_mapping/lib/drone_mapping
+[1.217s] writing list of installed files to '/home/atharv/swarm_ws/build/drone_mapping/install.log'
+[1.259s] Invoked command in '/home/atharv/swarm_ws/src/drone_mapping' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/atharv/swarm_ws/build/drone_mapping/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/atharv/swarm_ws/install/drone_mapping/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/drone_mapping build --build-base /home/atharv/swarm_ws/build/drone_mapping/build install --record /home/atharv/swarm_ws/build/drone_mapping/install.log --install-scripts $base/lib/drone_mapping --single-version-externally-managed install_data
