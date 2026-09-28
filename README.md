@@ -110,6 +110,37 @@ scoring ranks them last, and the survivor's own body reads as a narrowed passage
 to the lidar — the drone flagged the spot as a hazard without ever confirming the
 person. This is reproducible, understood, and on the list to fix.
 
+### The same stack, flying on satellites
+
+`--gps` swaps the EKF's position source from lidar odometry to GPS. Nothing
+downstream changes &mdash; SLAM, the detector, the hazard mapper and the planner
+all run untouched, and the autopilot reports `EKF3 IMU0 is using GPS` as it
+switches over.
+
+| | GPS-denied | GPS-enabled |
+|---|---|---|
+| Survivors reported | 3 of 4 | 2 of 4 |
+| **Survivors actually correct** | **3** | **1** &mdash; see below |
+| Hazards | 13 | 15 |
+| Duration | ~607 s | 639 s |
+
+**Read that second row carefully.** One of the GPS run's two "survivors" is a
+phantom: the pin sits 5.89 m from the nearest real casualty, and there is nobody
+there. Drone 2 saw the same person twice, its map drifted between the sightings,
+and the second pin landed outside the 3 m merge radius &mdash; so the ground
+station counted one person as two.
+
+Switching to GPS does not fix this, and it is worth understanding why: the
+survivor pins are projected through the **SLAM map frame**, which slam_toolbox
+builds from the lidar. The autopilot's position source never enters that
+calculation. Satellites make the aircraft fly better; they do nothing for the
+frame the detections are recorded in.
+
+So the honest reading of these two runs is **that the stack flies either way and
+searches about as well either way** &mdash; not that one navigation mode finds more
+people. One run each, against a search whose run-to-run spread is wider than the
+gap between them.
+
 ### See it run
 
 * **[docs/video/mission-demo.mp4](docs/video/mission-demo.mp4)** &mdash; the full
@@ -241,6 +272,13 @@ rather than a claim made here.
   crash-landed 2.8 m apart. Nothing in the planner knows a peer exists — they
   read each other only as anonymous lidar returns. Peer avoidance is the
   prerequisite for any further coordination work.
+* **A drifting map can turn one casualty into two.** Pins are recorded in the
+  SLAM map frame, which drifts. If a drone re-sights the same person after
+  enough drift, the second pin falls outside the merge radius and is reported as
+  an additional survivor. Seen in the GPS run: one real casualty, two pins,
+  5.89 m apart. Widening the merge radius trades this against merging two
+  genuinely close casualties; the real fix is to anchor the map, not to retune
+  the threshold.
 * **A survivor standing in a corridor reads as a narrowed passage.** The lidar
   sees a body-sized obstacle and the hazard mapper calls it a constriction. It is
   arguably useful — an unexplained obstruction is worth investigating — but it is
