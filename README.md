@@ -74,41 +74,60 @@ out. No MAVROS.
 Measured from a recorded mission. Raw logs, the merged report and the video for
 every run are kept under `swarm_ws/sim/logs/<timestamp>/`.
 
-### One mission, both drones
+### Best run: every casualty found
 
 | | |
 |---|---|
-| **Survivors found** | **3 of 4** — 4 raw detections merged to 3 unique |
-| **Worst pin error** | **0.50 m** from ground truth |
-| **Hazards mapped** | **13** — 9 narrowed passages, 4 routes with no way through |
-| **Mission time** | ~607 s, both drones armed, searched, returned and landed unattended |
+| **Survivors found** | **4 of 4** — all verified against ground truth, no false positives |
+| **Pin accuracy** | 0.22 m, 0.26 m, 0.36 m, **0.82 m worst** |
+| **Hazards mapped** | **13** — 8 narrowed passages, 5 routes with no way through |
+| **Mission time** | 614 s, both drones landed and disarmed unattended |
 | **Operator commands in flight** | 0 |
 
 | Survivor | Reported | Ground truth | Error | Seen by |
 |---|---|---|---|---|
-| S4 | (-4.71, 4.71) | (-4.8, 4.8) | **0.13 m** | drone 1 + drone 2 |
-| S3 | (-0.09, -9.55) | (0.0, -9.6) | **0.10 m** | drone 2 |
-| S1 | (10.10, -9.56) | (9.6, -9.6) | **0.50 m** | drone 2 |
+| S4 | (-4.92, 4.62) | (-4.8, 4.8) | **0.22 m** | drone 1 + drone 2 |
+| S3 | (-0.16, -9.40) | (0.0, -9.6) | **0.26 m** | drone 1 + drone 2 |
+| S1 | (9.95, -9.70) | (9.6, -9.6) | **0.36 m** | drone 1 + drone 2 |
+| S2 | (-0.77, -0.27) | (0.0, 0.0) | **0.82 m** | drone 1 |
 
-The first survivor was found by **both** drones and reported once — the ground
-station reconciles their maps into a single picture rather than counting the
-same casualty twice.
+Seven raw detections merged to four unique casualties: three were seen by
+**both** drones and reported once each. The ground station reconciles the two
+maps rather than counting the same person twice.
 
 ![Two drones searching the maze](docs/img/overhead.jpg)
 
-*Overhead view of the world: the maze, the debris, four survivors and two drones.*
+*Overhead view: the maze, the debris, four survivors and two drones.*
 
 ![SLAM map with survivor pins and hazards](docs/img/slam-map.jpg)
 
-*What a responder receives — one drone's map of a building it had never seen, with
-its flight path, survivor pins (circles) and hazards (triangles: amber for a
-narrowed passage, red for a route with no way through).*
+*What a responder receives — one drone's map of a building it had never seen,
+with its flight path, survivor pins (circles) and hazards (triangles: amber for
+a narrowed passage, red for a route with no way through).*
 
-**The one it missed** is S2, standing in a dead end at the exact centre of the
-building. Dead-end pockets expose the least unknown space, so the frontier
-scoring ranks them last, and the survivor's own body reads as a narrowed passage
-to the lidar — the drone flagged the spot as a hazard without ever confirming the
-person. This is reproducible, understood, and on the list to fix.
+### This is the best of eight runs, not the typical one
+
+Being straight about it, because the spread matters more than the best case.
+Eight two-drone missions in the same world, every pin checked against ground
+truth:
+
+| Real survivors found | Runs |
+|---|---|
+| 4 of 4 | 1 |
+| 3 of 4 | 3 |
+| 1 of 4 | 3 |
+| 0 of 4 | 1 |
+
+**Two of eight runs also reported casualties that were not there** — up to three
+phantoms in one run. Every phantom sat 3.9–5.9 m from a real person: the same
+casualty re-detected after the map drifted, landing just outside the ground
+station's 3 m merge radius, and counted as someone new.
+
+So: **the position of a detection is accurate to well under a metre; the count
+of detections is not yet trustworthy.** In a real deployment there is no ground
+truth to check against, so a rescue team could be handed four coordinates when
+one is real. This is the system's most important open problem, and it has a
+known cause and a known fix — see the gaps below.
 
 ### The same stack, flying on satellites
 
@@ -117,29 +136,16 @@ downstream changes &mdash; SLAM, the detector, the hazard mapper and the planner
 all run untouched, and the autopilot reports `EKF3 IMU0 is using GPS` as it
 switches over.
 
-| | GPS-denied | GPS-enabled |
-|---|---|---|
-| Survivors reported | 3 of 4 | 2 of 4 |
-| **Survivors actually correct** | **3** | **1** &mdash; see below |
-| Hazards | 13 | 15 |
-| Duration | ~607 s | 639 s |
+Across the eight runs, real survivors found were 3 / 1 / 1 / 0 without GPS and
+4 / 3 / 1 without it &mdash; **no separation between the two modes.** The spread
+within each condition is wider than any gap between them, so the useful claim is
+that the stack flies and searches about as well either way, not that one wins.
 
-**Read that second row carefully.** One of the GPS run's two "survivors" is a
-phantom: the pin sits 5.89 m from the nearest real casualty, and there is nobody
-there. Drone 2 saw the same person twice, its map drifted between the sightings,
-and the second pin landed outside the 3 m merge radius &mdash; so the ground
-station counted one person as two.
-
-Switching to GPS does not fix this, and it is worth understanding why: the
-survivor pins are projected through the **SLAM map frame**, which slam_toolbox
-builds from the lidar. The autopilot's position source never enters that
-calculation. Satellites make the aircraft fly better; they do nothing for the
-frame the detections are recorded in.
-
-So the honest reading of these two runs is **that the stack flies either way and
-searches about as well either way** &mdash; not that one navigation mode finds more
-people. One run each, against a search whose run-to-run spread is wider than the
-gap between them.
+Switching to GPS does not fix the phantom problem either, and it is worth
+understanding why: survivor pins are projected through the **SLAM map frame**,
+which slam_toolbox builds from the lidar. The autopilot's position source never
+enters that calculation. Satellites make the aircraft fly better; they do
+nothing for the frame the detections are recorded in.
 
 ### See it run
 

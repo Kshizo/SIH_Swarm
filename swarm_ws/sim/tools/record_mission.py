@@ -391,6 +391,10 @@ def summary_panel(feeds, started):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', default='mission.mp4')
+    parser.add_argument('--live', action='store_true',
+                        help='also show the composite in a window, for screen capture')
+    parser.add_argument('--no-file', action='store_true',
+                        help='live view only, write no mp4')
     parser.add_argument('--drones', type=int, default=2)
     parser.add_argument('--launch-poses', default='-9.6,-9.6,0 9.6,9.6,3.14159',
                         help='x,y,yaw per drone, so pins can be merged across drones')
@@ -408,10 +412,20 @@ def main():
 
     width = PANEL * 3
     height = PANEL * len(feeds) + BAR
-    writer = cv2.VideoWriter(args.out, cv2.VideoWriter_fourcc(*'mp4v'), FPS, (width, height))
-    if not writer.isOpened():
-        raise SystemExit('could not open ' + args.out + ' for writing')
-    print('recording to ' + os.path.abspath(args.out), flush=True)
+    writer = None
+    if not args.no_file:
+        writer = cv2.VideoWriter(args.out, cv2.VideoWriter_fourcc(*'mp4v'),
+                                 FPS, (width, height))
+        if not writer.isOpened():
+            raise SystemExit('could not open ' + args.out + ' for writing')
+        print('recording to ' + os.path.abspath(args.out), flush=True)
+
+    window = 'SIH_Swarm - live mission view'
+    if args.live or args.no_file:
+        # Fit the composite to the screen; it is 1920x1338 at full size.
+        cv2.namedWindow(window, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window, 1600, int(1600 * height / width))
+        print('live view open - press q in the window to close', flush=True)
 
     started = time.time()
     frames = 0
@@ -439,7 +453,14 @@ def main():
                    sum(len(f.hazards) for f in feeds)),
                 (width - 520, 37), 0.55, ACCENT)
             put(bar, 't+%d s' % int(time.time() - started), (width - 170, 37), 0.55, MUTED)
-            writer.write(np.vstack([frame, bar]))
+            composite = np.vstack([frame, bar])
+            if writer is not None:
+                writer.write(composite)
+            if args.live or args.no_file:
+                cv2.imshow(window, composite)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    print('live view closed', flush=True)
+                    break
             frames += 1
 
             if frames % (FPS * 30) == 0:
@@ -458,8 +479,12 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        writer.release()
-        print('wrote %s: %d frames, %.1f s' % (args.out, frames, frames / FPS), flush=True)
+        if writer is not None:
+            writer.release()
+            print('wrote %s: %d frames, %.1f s'
+                  % (args.out, frames, frames / FPS), flush=True)
+        if args.live or args.no_file:
+            cv2.destroyAllWindows()
         for feed in feeds:
             feed.close()
 
