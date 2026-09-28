@@ -9,7 +9,9 @@ set -uo pipefail
 
 names='arducopter|MicroXRCEAgent'
 gz='^gz sim'
-ros='parameter_bridge|async_slam_toolbox|person_detector|frontier_exploration|rf2o_laser_odometry|vio_to_ardupilot|hazard_mapper|ground_station|record_mission|robot_state_publisher'
+# 'ros2 bag record' belongs here: without it a recorder outlives its own run
+# and keeps logging the next one into the previous run's bag.
+ros='parameter_bridge|async_slam_toolbox|person_detector|frontier_exploration|rf2o_laser_odometry|vio_to_ardupilot|hazard_mapper|ground_station|record_mission|robot_state_publisher|ros2 bag record|rosbag2'
 
 count() {
   # `pgrep -c` exits non-zero on a zero count, so count lines instead.

@@ -342,6 +342,14 @@ class FrontierExploration(Node):
             # 26 m building, and starved the candidate list into an early return.
             'exploration_radius_m': 15.0,
             'max_speed_mps': 0.3,
+            # Peer avoidance. Walls, debris and a motionless casualty all end up
+            # in the map, so a laser return landing where the map says there is
+            # free space is something that was not there when the map was built -
+            # in this fleet, the other drone. Standoff is centre to centre, and
+            # the airframe is 0.47 m across, so it has to be comfortably more.
+            'peer_standoff_m': 1.4,
+            'peer_min_points': 2,
+            'reactive_stop_m': 0.5,
             # Sector partitioning. count <= 1 disables it entirely; otherwise the
             # search space is cut into `sector_count` angular wedges about
             # (sector_origin_x, sector_origin_y) and this drone takes one of them.
@@ -372,6 +380,7 @@ class FrontierExploration(Node):
             'coverage_dwell_s', 'coverage_cooldown_s',
             'coverage_scan_timeout_s', 'map_timeout_s', 'tf_timeout_s',
             'coverage_max_tilt_deg', 'exploration_radius_m', 'max_speed_mps',
+            'peer_standoff_m', 'reactive_stop_m',
         )
         if any(not math.isfinite(self.settings[name])
                or self.settings[name] <= 0.0 for name in positive):
@@ -473,6 +482,9 @@ class FrontierExploration(Node):
         self.stabilise_until = 0.0
         self.takeoff_time = 0.0
         self.max_speed = float(self.settings['max_speed_mps'])
+        self.peer_standoff = float(self.settings['peer_standoff_m'])
+        self.peer_min_points = int(self.settings['peer_min_points'])
+        self.reactive_stop = float(self.settings['reactive_stop_m'])
         self.max_yaw_rate = 0.4
         self.FREE_THRESH = 50
         self.OCC_THRESH = 50
@@ -1257,7 +1269,86 @@ class FrontierExploration(Node):
                     heapq.heappush(open_set, (tentative_cost + heuristic, neighbor))
         return []
 
+    def nearest_peer(self):
+        """Closest laser return that the map cannot account for.
+
+        Returns (range, bearing) in the body frame, or None. Only cells the map
+        calls *free* count: unknown cells are simply unexplored, and flagging
+        those would make every frontier look like a drone.
+
+        This is the whole of the drones' mutual awareness. They exchange no
+        messages - one simply sees that something is where the building is not.
+        """
+        scan = self.latest_scan_msg
+        if scan is None or self.coverage.data is None or self.coverage.info is None:
+            return None
+
+        ranges = np.asarray(scan.ranges, dtype=float)
+        if ranges.size == 0:
+            return None
+        valid = (np.isfinite(ranges) & (ranges >= scan.range_min)
+                 & (ranges <= scan.range_max) & (ranges <= self.peer_standoff * 2.0))
+        indices = np.nonzero(valid)[0]
+        if indices.size < self.peer_min_points:
+            return None
+
+        info = self.coverage.info
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                self.coverage.frame or 'map', scan.header.frame_id, rclpy.time.Time())
+        except TransformException:
+            return None
+
+        angles = scan.angle_min + indices * scan.angle_increment
+        local_x = ranges[indices] * np.cos(angles)
+        local_y = ranges[indices] * np.sin(angles)
+
+        translation = transform.transform.translation
+        yaw = quaternion_yaw(transform.transform.rotation)
+        world_x = translation.x + math.cos(yaw) * local_x - math.sin(yaw) * local_y
+        world_y = translation.y + math.sin(yaw) * local_x + math.cos(yaw) * local_y
+
+        rows, columns = ViewCoverage.grid_coordinates(info, world_x, world_y)
+        inside = ((rows >= 0) & (rows < info.height)
+                  & (columns >= 0) & (columns < info.width))
+        if not inside.any():
+            return None
+
+        unaccounted = np.zeros(indices.shape, dtype=bool)
+        unaccounted[inside] = self.coverage.data[rows[inside], columns[inside]] == 0
+        if unaccounted.sum() < self.peer_min_points:
+            return None
+
+        hits = np.nonzero(unaccounted)[0]
+        closest = hits[np.argmin(ranges[indices][hits])]
+        return float(ranges[indices][closest]), float(angles[closest])
+
     def publish_velocity(self, velocity_x, velocity_y, yaw_rate):
+        # Peer avoidance runs first and runs always, including while stationary:
+        # stopping is not avoidance if the other drone is the one closing, and a
+        # peer approaching from behind is outside the travel cone below.
+        peer = self.nearest_peer()
+        if peer is not None and peer[0] < self.peer_standoff:
+            distance, bearing = peer
+            away = wrap_angle(bearing + math.pi)
+            speed = min(0.4, self.max_speed)
+            velocity_x = speed * math.cos(away)
+            velocity_y = speed * math.sin(away)
+            yaw_rate = 0.0
+            self.get_logger().warning(
+                'Peer %.2f m off at %.0f deg; yielding'
+                % (distance, math.degrees(bearing)),
+                throttle_duration_sec=2.0)
+            self.current_vx, self.current_vy = velocity_x, velocity_y
+            message = TwistStamped()
+            message.header.stamp = self.get_clock().now().to_msg()
+            message.header.frame_id = 'base_link'
+            message.twist.linear.x = float(velocity_x)
+            message.twist.linear.y = float(velocity_y)
+            message.twist.angular.z = 0.0
+            self.cmd_vel_pub.publish(message)
+            return
+
         if self.latest_scan_msg is not None and (velocity_x != 0.0 or velocity_y != 0.0):
             # Reactive collision avoidance layer
             scan = self.latest_scan_msg
@@ -1270,7 +1361,7 @@ class FrontierExploration(Node):
                 # Only care about obstacles in our travel cone (+/- 45 deg)
                 if abs(wrap_angle(angle - travel_yaw)) < math.radians(45.0):
                     # Project range onto travel direction
-                    if r * math.cos(wrap_angle(angle - travel_yaw)) < 0.35:
+                    if r * math.cos(wrap_angle(angle - travel_yaw)) < self.reactive_stop:
                         safe = False
                         break
             if not safe:

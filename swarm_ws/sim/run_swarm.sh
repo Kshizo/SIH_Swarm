@@ -9,6 +9,7 @@
 #   ./sim/run_swarm.sh --no-stack       # sim + autopilots only
 #   ./sim/run_swarm.sh --record out.mp4 # also film the mission (see tools/record_mission.py)
 #   ./sim/run_swarm.sh --gps            # fly on satellites instead of lidar odometry
+#   ./sim/run_swarm.sh --bag            # also record a ROS 2 bag per drone, for analysis
 #
 # Everything is logged to sim/logs/<timestamp>/ and torn down on Ctrl-C.
 set -uo pipefail
@@ -24,6 +25,7 @@ DRONES=2
 HEADLESS=0
 RUN_STACK=1
 RECORD=""
+BAG=0
 NAV_PARAMS="$WS_DIR/src/gps_denied.parm"
 WORLD="$SIM_DIR/worlds/maze_survivors.sdf"
 
@@ -34,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --no-stack) RUN_STACK=0; shift ;;
     --record)   RECORD="${2:-mission.mp4}"; shift 2 ;;
     --gps)      NAV_PARAMS="$SIM_DIR/config/gps_enabled.parm"; shift ;;
+    --bag)      BAG=1; shift ;;
     --world)    WORLD="$2"; shift 2 ;;
     -h|--help)  sed -n '2,12p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
@@ -65,6 +68,15 @@ start() {  # start <name> <command...>
 cleanup() {
   echo
   note "shutting down"
+
+  # Bag recorders write their message index on SIGINT. Kill them first and give
+  # them a moment, or the bag has no metadata.yaml and `ros2 bag info` refuses
+  # it (the .mcap itself stays readable, but only if you know to open the file
+  # directly rather than the directory).
+  if [[ "${BAG:-0}" == "1" ]]; then
+    pgrep -f 'ros2 bag record' 2>/dev/null | xargs -r kill -INT 2>/dev/null
+    sleep 4
+  fi
   for pid in "${PIDS[@]}"; do
     kill -TERM "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
   done
@@ -186,6 +198,22 @@ if [[ -n "$RECORD" ]]; then
     source '$WS_DIR/install/setup.bash'
     exec python3 '$SIM_DIR/tools/record_mission.py' --out '$record_out' --drones $DRONES"
   note "  video -> $record_out"
+fi
+
+# ------------------------------------------------------------------- bags --
+# One recorder per drone, because the drones are on separate ROS domains and a
+# single recorder cannot see both. Only the topics an analysis needs: the
+# camera streams would make the bags enormous and are already in the video.
+if [[ "$BAG" == "1" && "$RUN_STACK" == "1" ]]; then
+  bag_topics="/map /ap/status /person_map_pins /hazard_markers /exploration/frontier_cells /exploration/planned_path"
+  for (( d=1; d<=DRONES; d++ )); do
+    start "bag_drone$d" env ROS_DOMAIN_ID="$d" bash -c "
+      source '$ROS_DISTRO_SETUP'
+      source '$ARDU_WS/install/setup.bash'
+      source '$WS_DIR/install/setup.bash'
+      exec ros2 bag record --storage mcap -o '$log_dir/bag_drone$d' $bag_topics"
+  done
+  note "  bags -> $log_dir/bag_drone*"
 fi
 
 # ----------------------------------------------------------- ground station --
