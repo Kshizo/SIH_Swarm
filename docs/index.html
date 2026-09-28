@@ -1,0 +1,949 @@
+<title>SIH Swarm Bringup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground: #F1F3F0;
+    --surface: #FFFFFF;
+    --surface-2: #E9ECE8;
+    --ink: #161A17;
+    --muted: #5E6662;
+    --line: #D8DDD8;
+    --line-strong: #BCC4BC;
+    --accent: #B3660A;
+    --accent-soft: #F5E6D0;
+    --ok: #1C7565;
+    --ok-soft: #DCEDE8;
+    --alert: #A83A2E;
+    --alert-soft: #F6E2DF;
+    --wall: #B9BEB6;
+    --wall-edge: #9AA199;
+
+    --display: "IBM Plex Sans Condensed", "Helvetica Neue", Arial, sans-serif;
+    --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+    --step-0: 0.9375rem;
+    --step-1: 1.0625rem;
+    --step-2: 1.375rem;
+    --step-3: 1.875rem;
+    --step-4: 2.625rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1211;
+      --surface: #171B19;
+      --surface-2: #1E2321;
+      --ink: #E7EBE7;
+      --muted: #97A09A;
+      --line: #282E2B;
+      --line-strong: #3A423E;
+      --accent: #EFA544;
+      --accent-soft: #332613;
+      --ok: #52C0A8;
+      --ok-soft: #122C27;
+      --alert: #E57264;
+      --alert-soft: #331D1A;
+      --wall: #333A36;
+      --wall-edge: #434B46;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1211;
+    --surface: #171B19;
+    --surface-2: #1E2321;
+    --ink: #E7EBE7;
+    --muted: #97A09A;
+    --line: #282E2B;
+    --line-strong: #3A423E;
+    --accent: #EFA544;
+    --accent-soft: #332613;
+    --ok: #52C0A8;
+    --ok-soft: #122C27;
+    --alert: #E57264;
+    --alert-soft: #331D1A;
+    --wall: #333A36;
+    --wall-edge: #434B46;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: var(--step-0);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 52px;
+  }
+
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; line-height: 1.15; }
+  h1 { font-size: var(--step-4); letter-spacing: -0.015em; }
+  h2 { font-size: var(--step-3); letter-spacing: -0.01em; }
+  h3 { font-size: var(--step-1); }
+  p { margin: 0; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  code, .mono { font-family: var(--mono); font-size: 0.875em; }
+  code { color: var(--accent); word-break: break-word; }
+
+  /* ---------------------------------------------------------------- masthead */
+  .masthead { display: flex; flex-direction: column; gap: 18px; }
+  .masthead .lede {
+    max-width: 62ch;
+    font-size: var(--step-1);
+    color: var(--muted);
+  }
+  .masthead .lede strong { color: var(--ink); font-weight: 600; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stat { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 3px; }
+  .stat .value {
+    font-family: var(--display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .stat .value span { font-size: 0.8125rem; color: var(--muted); font-weight: 500; }
+  .stat .label { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+  /* ------------------------------------------------------------------ layout */
+  section { display: flex; flex-direction: column; gap: 20px; }
+  .section-head { display: flex; flex-direction: column; gap: 6px; }
+  .section-head p { color: var(--muted); max-width: 66ch; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+
+  /* --------------------------------------------------------------- maze plan */
+  .plan { display: grid; grid-template-columns: minmax(0, 1fr) 224px; gap: 0; }
+  .plan-canvas { padding: 18px; border-right: 1px solid var(--line); min-width: 0; }
+  .plan svg { display: block; width: 100%; height: auto; max-width: 100%; }
+  .plan-side { padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+
+  .legend { display: flex; flex-direction: column; gap: 9px; }
+  .legend-row { display: flex; align-items: center; gap: 9px; font-size: 0.8125rem; }
+  .swatch { width: 13px; height: 13px; border-radius: 2px; flex: none; }
+  .swatch.survivor { border-radius: 50%; background: var(--accent); }
+  .swatch.drone { background: var(--ok); }
+  .swatch.wall { background: var(--wall); border: 1px solid var(--wall-edge); }
+  .swatch.ring { background: none; border: 1px dashed var(--ok); border-radius: 50%; }
+
+  .toggle {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 0.8125rem; color: var(--muted); cursor: pointer;
+    user-select: none;
+  }
+  .toggle input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+  .coords { display: flex; flex-direction: column; gap: 5px; }
+  .coord-row {
+    display: flex; justify-content: space-between; gap: 10px;
+    font-family: var(--mono); font-size: 0.75rem;
+    padding: 4px 0; border-bottom: 1px dashed var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  .coord-row:last-child { border-bottom: 0; }
+  .coord-row .tag { color: var(--muted); }
+
+  .marker { cursor: pointer; }
+  .marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ------------------------------------------------------------- flow figure */
+  .flow { padding: 20px 18px; overflow-x: auto; }
+  .flow svg { display: block; min-width: 900px; width: 100%; height: auto; }
+
+  /* -------------------------------------------------------------- data table */
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.875rem; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+  th {
+    font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+    background: var(--surface-2);
+  }
+  td.num, th.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .sub { display: block; color: var(--muted); font-size: 0.8125rem; }
+
+  /* ---------------------------------------------------------------- commands */
+  .steps { display: flex; flex-direction: column; gap: 14px; }
+  .step { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .step-num {
+    font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+    border: 1px solid var(--line-strong); border-radius: 50%;
+    width: 26px; height: 26px; display: grid; place-items: center;
+    margin-top: 2px;
+  }
+  .step-body { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .step-body h3 { font-size: var(--step-0); font-family: var(--body); font-weight: 600; }
+  .step-body p { color: var(--muted); font-size: 0.875rem; }
+
+  .cmd {
+    position: relative;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 11px 76px 11px 13px;
+    overflow-x: auto;
+  }
+  .cmd pre { margin: 0; font-family: var(--mono); font-size: 0.8125rem; line-height: 1.6; white-space: pre; }
+  .cmd .prompt { color: var(--muted); user-select: none; }
+  .copy {
+    position: absolute; top: 8px; right: 8px;
+    font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--surface); color: var(--muted);
+    border: 1px solid var(--line-strong); border-radius: 3px;
+    padding: 4px 8px; cursor: pointer;
+  }
+  .copy:hover { color: var(--ink); border-color: var(--ink); }
+  .copy[data-done="1"] { color: var(--ok); border-color: var(--ok); }
+
+  /* ------------------------------------------------------------------ ledger */
+  .ledger { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .entry {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+    padding: 15px 16px; display: flex; flex-direction: column; gap: 7px;
+  }
+  .entry-head { display: flex; align-items: center; gap: 9px; }
+  .pill {
+    font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 2px; flex: none;
+  }
+  .pill.fixed { background: var(--ok-soft); color: var(--ok); }
+  .pill.open { background: var(--alert-soft); color: var(--alert); }
+  .entry h3 { font-size: 0.9375rem; font-family: var(--body); font-weight: 600; }
+  .entry p { font-size: 0.8125rem; color: var(--muted); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    display: flex; flex-wrap: wrap; gap: 8px 20px;
+  }
+
+  @media (max-width: 860px) {
+    .plan { grid-template-columns: minmax(0, 1fr); }
+    .plan-canvas { border-right: 0; border-bottom: 1px solid var(--line); }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 560px) {
+    :root { --step-4: 2rem; --step-3: 1.5rem; }
+    .page { padding-block: 28px 52px; gap: 40px; }
+    .ledger { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">SIH_Swarm &middot; ROS 2 Jazzy &middot; ArduPilot SITL &middot; Gazebo Harmonic</p>
+    <h1>Two drones, one dark maze, four survivors</h1>
+    <p class="lede">
+      A GPS-denied search stack: lidar odometry feeds the autopilot's EKF as vision,
+      SLAM builds the map, frontier exploration flies the search, and an SSD-Lite
+      detector pins survivors while a hazard mapper flags the passages a responder
+      should not use. <strong>Every figure above was measured from one recorded
+      mission</strong>, flown by two drones that never spoke to each other.
+    </p>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="value">3<span> of 4</span></span>
+        <span class="label">Survivors found</span>
+      </div>
+      <div class="stat">
+        <span class="value">0.50<span> m</span></span>
+        <span class="label">Worst pin error</span>
+      </div>
+      <div class="stat">
+        <span class="value">13</span>
+        <span class="label">Hazards mapped</span>
+      </div>
+      <div class="stat">
+        <span class="value">0<span> pilot inputs</span></span>
+        <span class="label">In flight</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ maze plan -->
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Plan view</p>
+      <h2>maze_survivors.sdf</h2>
+      <p>
+        Generated from a seeded perfect maze with extra loops cut through it, so the
+        generator can prove every square is reachable before it writes the world.
+        Survivors are Rescue Randy mannequins placed at the dead ends furthest from
+        both launch points. Click a marker for its world coordinates.
+      </p>
+    </div>
+
+    <div class="panel plan">
+      <div class="plan-canvas">
+        <svg id="maze" viewBox="-15.2 -15.2 30.4 30.4" role="img"
+             aria-label="Plan view of the 26.4 metre maze with four survivors and two drone launch points"></svg>
+      </div>
+      <div class="plan-side">
+        <div class="legend">
+          <div class="legend-row"><span class="swatch wall"></span> Wall block, 2.4 m &times; 2.5 m tall</div>
+          <div class="legend-row"><span class="swatch survivor"></span> Survivor (Rescue Randy)</div>
+          <div class="legend-row"><span class="swatch drone"></span> Drone launch point</div>
+          <div class="legend-row"><span class="swatch" style="background:var(--alert);opacity:0.55"></span> Debris, narrows a passage to 1.8 m</div>
+          <div class="legend-row"><span class="swatch ring"></span> Lidar reach, 12 m</div>
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="ring-toggle">
+          Show lidar reach
+        </label>
+
+        <div>
+          <p class="eyebrow" style="margin-bottom:8px;">Selected</p>
+          <div class="coords" id="coords">
+            <div class="coord-row"><span class="tag">hint</span><span>tap a marker</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ data flow -->
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Signal flow</p>
+      <h2>Where every message goes</h2>
+      <p>
+        One of these graphs runs per drone, isolated on its own <code>ROS_DOMAIN_ID</code>.
+        The autopilot is reached two ways at once: odometry goes in over MAVLink as
+        <code>VISION_POSITION_ESTIMATE</code>, while arm, mode and velocity commands go over
+        ArduPilot's native DDS.
+      </p>
+    </div>
+
+    <div class="panel flow">
+      <svg id="flow" viewBox="0 0 1340 410" role="img"
+           aria-label="Diagram of the ROS 2 node graph: Gazebo sensors bridge into SLAM, odometry, detection and exploration, which command ArduPilot"></svg>
+    </div>
+  </section>
+
+  <!-- ============================================================ endpoints -->
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Endpoints</p>
+      <h2>Ports, one set per drone</h2>
+      <p>
+        Every number here is derived from the SITL instance index, so adding a third
+        drone means instance 2 and the next slot in each column.
+      </p>
+    </div>
+
+    <div class="panel table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th class="num">Drone 1</th>
+            <th class="num">Drone 2</th>
+            <th>Who binds it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SITL instance<span class="sub">arducopter <code>-I</code></span></td>
+            <td class="num">0</td>
+            <td class="num">1</td>
+            <td>run_swarm.sh</td>
+          </tr>
+          <tr>
+            <td>ROS domain<span class="sub">isolates the two graphs</span></td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+            <td>every node + the XRCE agent</td>
+          </tr>
+          <tr>
+            <td>Gazebo FDM<span class="sub">servo out, state back</span></td>
+            <td class="num">9002</td>
+            <td class="num">9012</td>
+            <td>ArduPilotPlugin in the model</td>
+          </tr>
+          <tr>
+            <td>MAVLink, vision<span class="sub">VISION_POSITION_ESTIMATE</span></td>
+            <td class="num">14550</td>
+            <td class="num">14560</td>
+            <td>vio_to_ardupilot</td>
+          </tr>
+          <tr>
+            <td>MAVLink, spare<span class="sub">attach a GCS here</span></td>
+            <td class="num">14551</td>
+            <td class="num">14561</td>
+            <td>MAVProxy / QGroundControl</td>
+          </tr>
+          <tr>
+            <td>Micro-XRCE-DDS<span class="sub">carries the <code>ap/</code> topics</span></td>
+            <td class="num">2019</td>
+            <td class="num">2020</td>
+            <td>MicroXRCEAgent</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================================================== bringup -->
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Bringup</p>
+      <h2>From clone to flying</h2>
+      <p>
+        Needs ROS 2 Jazzy, Gazebo Harmonic, a built ArduPilot SITL, ardupilot_gazebo,
+        <code>MicroXRCEAgent</code>, and <code>ardupilot_msgs</code> on the prefix path.
+      </p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <div class="step-body">
+          <h3>Fetch the odometry package the repo left empty</h3>
+          <p><code>src/rf2o_laser_odometry</code> is committed as a bare directory &mdash; it was a submodule once.</p>
+          <div class="cmd">
+            <button class="copy" type="button">Copy</button>
+            <pre><span class="prompt">$ </span>cd swarm_ws/src &amp;&amp; git clone -b ros2 \
+    https://github.com/MAPIRlab/rf2o_laser_odometry.git</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">2</span>
+        <div class="step-body">
+          <h3>Install the detector runtime</h3>
+          <p>
+            <code>person_detector</code> imports <code>ai_edge_litert</code>. Install it into your
+            user site, then make sure NumPy stays on 1.x &mdash; the system OpenCV and cv_bridge
+            are built against it and will not import under NumPy 2.
+          </p>
+          <div class="cmd">
+            <button class="copy" type="button">Copy</button>
+            <pre><span class="prompt">$ </span>pip install --user --break-system-packages ai_edge_litert
+<span class="prompt">$ </span>pip uninstall -y --break-system-packages numpy   <span class="prompt"># keep the distro 1.26</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">3</span>
+        <div class="step-body">
+          <h3>Build the workspace</h3>
+          <p>Delete the committed <code>build/</code> and <code>install/</code> first &mdash; their CMake caches point at another machine.</p>
+          <div class="cmd">
+            <button class="copy" type="button">Copy</button>
+            <pre><span class="prompt">$ </span>cd swarm_ws &amp;&amp; rm -rf build install log
+<span class="prompt">$ </span>source /opt/ros/jazzy/setup.bash &amp;&amp; source ~/ardu_ws/install/setup.bash
+<span class="prompt">$ </span>colcon build --symlink-install</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">4</span>
+        <div class="step-body">
+          <h3>Generate the simulation assets</h3>
+          <p>
+            The drone model is spliced onto ardupilot_gazebo's <code>iris_with_ardupilot</code>
+            at generation time rather than vendored, so nothing LGPL is committed here.
+            The world writes itself from the maze data.
+          </p>
+          <div class="cmd">
+            <button class="copy" type="button">Copy</button>
+            <pre><span class="prompt">$ </span>python3 sim/tools/gen_drone_models.py
+<span class="prompt">$ </span>python3 sim/tools/gen_world.py</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">5</span>
+        <div class="step-body">
+          <h3>Fly it</h3>
+          <p>
+            Starts Gazebo, both autopilots, both XRCE agents and both ROS stacks, logs each
+            to <code>sim/logs/&lt;timestamp&gt;/</code>, and tears the whole tree down on Ctrl-C.
+          </p>
+          <div class="cmd">
+            <button class="copy" type="button">Copy</button>
+            <pre><span class="prompt">$ </span>./sim/run_swarm.sh                 <span class="prompt"># both drones, GUI</span>
+<span class="prompt">$ </span>./sim/run_swarm.sh --drones 1 --headless</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">6</span>
+        <div class="step-body">
+          <h3>Watch it work</h3>
+          <p>Map, laser scan, the planned path and the survivor pins all render in RViz.</p>
+          <div class="cmd">
+            <button class="copy" type="button">Copy</button>
+            <pre><span class="prompt">$ </span>ROS_DOMAIN_ID=1 rviz2      <span class="prompt"># /map, /scan, /person_map_pins</span>
+<span class="prompt">$ </span>mavproxy.py --master=udpin:127.0.0.1:14551</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================================== ledger -->
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Ledger</p>
+      <h2>What was broken, and what still bites</h2>
+      <p>Each of these stopped the stack cold somewhere between <code>git clone</code> and takeoff.</p>
+    </div>
+
+    <div class="ledger">
+      <div class="entry">
+        <div class="entry-head"><span class="pill fixed">Fixed</span><h3>Simulation assets absent</h3></div>
+        <p>
+          The launch files bridge <code>/drone1/lidar/scan</code> and reference a
+          <code>maze_survivors</code> world that exists nowhere in the repo. Both drone models
+          and the world are now generated under <code>sim/</code>.
+        </p>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head"><span class="pill fixed">Fixed</span><h3>Depth never reached the detector</h3></div>
+        <p>
+          The bridge remapped RGB and lidar but not depth, so <code>person_detector</code>
+          waited forever on <code>/camera/depth_image</code> and its time synchroniser never fired.
+        </p>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head"><span class="pill fixed">Fixed</span><h3>GPS-denied params renamed upstream</h3></div>
+        <p>
+          ArduPilot 4.6 moved <code>GPS_TYPE</code> to <code>GPS1_TYPE</code>. The old names were
+          silently ignored, the simulated GPS stayed on, and arming failed with
+          <em>&ldquo;GPS and AHRS differ by 13.6 m&rdquo;</em>.
+        </p>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head"><span class="pill fixed">Fixed</span><h3>EKF source sets 2 and 3</h3></div>
+        <p>
+          The pre-arm check walks every source set, not just the active one. Sets 2 and 3
+          still defaulted to GPS, so arming failed with
+          <em>&ldquo;EK3 sources require GPS&rdquo;</em> even with set 1 on external nav.
+        </p>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head"><span class="pill fixed">Fixed</span><h3>Coverage layer had no input</h3></div>
+        <p>
+          <code>frontier_exploration</code> read a <code>scan_raw</code> topic nothing published,
+          and re-published onto <code>/scan</code>, which the bridge already owned. It now reads
+          the bridged scan and publishes its gated copy to <code>/scan_gated</code>.
+        </p>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head"><span class="pill open">Watch</span><h3>NumPy 2 breaks cv_bridge</h3></div>
+        <p>
+          Anything that pulls NumPy 2 into your user site &mdash; installing the detector
+          runtime does &mdash; takes OpenCV and cv_bridge down with it. Keep the distro's 1.26.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Sensor geometry matches the nodes: lidar at z&nbsp;+0.05&nbsp;m, camera at x&nbsp;+0.10&nbsp;m pitched 23.5&deg; down, 59&deg; horizontal field of view.</span>
+  </footer>
+</div>
+
+<script>
+  // ---------------------------------------------------------------- maze plan
+  // Geometry straight out of sim/tools/gen_world.py (seed 7). Wall boxes are
+  // [centre x, centre y, size x, size y] in metres, world frame, y up.
+  var MAZE = {
+    extent: 26.4,
+    walls: [
+      [0.0,-12.0,26.4,2.4],[-12.0,-9.6,2.4,2.4],[-7.2,-9.6,2.4,2.4],[12.0,-9.6,2.4,2.4],
+      [-12.0,-7.2,2.4,2.4],[-4.8,-7.2,7.2,2.4],[7.2,-7.2,12.0,2.4],[-12.0,-4.8,2.4,2.4],
+      [-2.4,-4.8,2.4,2.4],[12.0,-4.8,2.4,2.4],[-12.0,-2.4,2.4,2.4],[-7.2,-2.4,2.4,2.4],
+      [-2.4,-2.4,2.4,2.4],[4.8,-2.4,7.2,2.4],[12.0,-2.4,2.4,2.4],[-12.0,0.0,2.4,2.4],
+      [-7.2,0.0,2.4,2.4],[-2.4,0.0,2.4,2.4],[2.4,0.0,2.4,2.4],[12.0,0.0,2.4,2.4],
+      [-12.0,2.4,2.4,2.4],[-7.2,2.4,2.4,2.4],[0.0,2.4,7.2,2.4],[7.2,2.4,2.4,2.4],
+      [12.0,2.4,2.4,2.4],[-12.0,4.8,2.4,2.4],[-7.2,4.8,2.4,2.4],[7.2,4.8,2.4,2.4],
+      [12.0,4.8,2.4,2.4],[-12.0,7.2,2.4,2.4],[-4.8,7.2,7.2,2.4],[4.8,7.2,7.2,2.4],
+      [12.0,7.2,2.4,2.4],[-12.0,9.6,2.4,2.4],[12.0,9.6,2.4,2.4],[0.0,12.0,26.4,2.4]
+    ],
+    // Debris piles that narrow a corridor to 1.8 m without sealing it.
+    debris: [[2.4,9.6,1.08,0.6],[-7.2,9.6,1.08,0.6],[9.6,4.8,0.6,1.08]],
+    survivors: [[9.6,-9.6],[0.0,0.0],[0.0,-9.6],[-4.8,4.8]],
+    drones: { drone1: [-9.6,-9.6], drone2: [9.6,9.6] }
+  };
+
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function el(name, attrs) {
+    var node = document.createElementNS(SVG_NS, name);
+    for (var key in attrs) { node.setAttribute(key, attrs[key]); }
+    return node;
+  }
+
+  function drawMaze() {
+    var svg = document.getElementById('maze');
+    if (!svg) { return; }
+
+    // Lidar reach rings sit underneath everything, hidden until asked for.
+    var rings = el('g', { id: 'rings', opacity: '0' });
+    Object.keys(MAZE.drones).forEach(function (name) {
+      var p = MAZE.drones[name];
+      rings.appendChild(el('circle', {
+        cx: p[0], cy: -p[1], r: 12,
+        fill: 'var(--ok)', 'fill-opacity': '0.05',
+        stroke: 'var(--ok)', 'stroke-width': 0.07, 'stroke-dasharray': '0.5 0.35'
+      }));
+    });
+    svg.appendChild(rings);
+
+    var walls = el('g', {});
+    MAZE.walls.forEach(function (w) {
+      walls.appendChild(el('rect', {
+        x: w[0] - w[2] / 2, y: -w[1] - w[3] / 2, width: w[2], height: w[3],
+        fill: 'var(--wall)', stroke: 'var(--wall-edge)', 'stroke-width': 0.04
+      }));
+    });
+    svg.appendChild(walls);
+
+    function marker(kind, label, pos, detail) {
+      var g = el('g', { class: 'marker', tabindex: '0', role: 'button' });
+      g.setAttribute('aria-label', label + ' at x ' + pos[0] + ', y ' + pos[1]);
+      var x = pos[0], y = -pos[1];
+
+      if (kind === 'survivor') {
+        g.appendChild(el('circle', { cx: x, cy: y, r: 0.95, fill: 'var(--accent)', 'fill-opacity': '0.16' }));
+        g.appendChild(el('circle', { cx: x, cy: y, r: 0.5, fill: 'var(--accent)' }));
+      } else {
+        g.appendChild(el('rect', {
+          x: x - 0.72, y: y - 0.72, width: 1.44, height: 1.44, rx: 0.2,
+          fill: 'var(--ok)', 'fill-opacity': '0.18'
+        }));
+        g.appendChild(el('rect', {
+          x: x - 0.42, y: y - 0.42, width: 0.84, height: 0.84, rx: 0.12, fill: 'var(--ok)'
+        }));
+      }
+
+      var text = el('text', {
+        x: x, y: y + 1.95, 'text-anchor': 'middle',
+        'font-family': 'IBM Plex Mono, monospace', 'font-size': 0.82,
+        fill: kind === 'survivor' ? 'var(--accent)' : 'var(--ok)'
+      });
+      text.textContent = label;
+      g.appendChild(text);
+
+      function select() { showCoords(label, pos, detail); }
+      g.addEventListener('click', select);
+      g.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
+      });
+      return g;
+    }
+
+    var rubble = el('g', {});
+    (MAZE.debris || []).forEach(function (d) {
+      rubble.appendChild(el('rect', {
+        x: d[0] - d[2] / 2, y: -d[1] - d[3] / 2, width: d[2], height: d[3],
+        fill: 'var(--alert)', 'fill-opacity': '0.5'
+      }));
+    });
+    svg.appendChild(rubble);
+
+    var markers = el('g', {});
+    MAZE.survivors.forEach(function (p, i) {
+      markers.appendChild(marker('survivor', 'S' + (i + 1), p, 'Rescue Randy, static'));
+    });
+    markers.appendChild(marker('drone', 'D1', MAZE.drones.drone1, 'heading 0°, domain 1'));
+    markers.appendChild(marker('drone', 'D2', MAZE.drones.drone2, 'heading 180°, domain 2'));
+    svg.appendChild(markers);
+
+    // Scale bar: 5 m along the bottom edge.
+    var bar = el('g', {});
+    var bx = -13.2, by = 14.3;
+    bar.appendChild(el('line', {
+      x1: bx, y1: by, x2: bx + 5, y2: by,
+      stroke: 'var(--muted)', 'stroke-width': 0.09
+    }));
+    [0, 5].forEach(function (d) {
+      bar.appendChild(el('line', {
+        x1: bx + d, y1: by - 0.28, x2: bx + d, y2: by + 0.28,
+        stroke: 'var(--muted)', 'stroke-width': 0.09
+      }));
+    });
+    var scaleLabel = el('text', {
+      x: bx + 5.5, y: by + 0.3,
+      'font-family': 'IBM Plex Mono, monospace', 'font-size': 0.8, fill: 'var(--muted)'
+    });
+    scaleLabel.textContent = '5 m';
+    bar.appendChild(scaleLabel);
+    svg.appendChild(bar);
+  }
+
+  function showCoords(label, pos, detail) {
+    var box = document.getElementById('coords');
+    if (!box) { return; }
+    var rows = [
+      ['marker', label],
+      ['x', pos[0].toFixed(1) + ' m'],
+      ['y', pos[1].toFixed(1) + ' m'],
+      ['note', detail]
+    ];
+    box.innerHTML = '';
+    rows.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'coord-row';
+      var tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = r[0];
+      var val = document.createElement('span');
+      val.textContent = r[1];
+      row.appendChild(tag);
+      row.appendChild(val);
+      box.appendChild(row);
+    });
+  }
+
+  // ------------------------------------------------------------- flow figure
+  // Five columns, strictly left to right, so no edge ever doubles back. Boxes
+  // that share a source or a target get their own exit/entry height, which is
+  // what keeps the labels off each other.
+  var BOXES = [
+    { id: 'gz',     x: 6,    y: 126, w: 150, h: 100, title: 'Gazebo Harmonic',
+      lines: ['maze_survivors', 'lidar / RGB / depth'], tone: 'muted' },
+    { id: 'bridge', x: 286,  y: 126, w: 150, h: 100, title: 'ros_gz_bridge',
+      lines: ['parameter_bridge', '/clock + 4 sensors'], tone: 'plain' },
+    { id: 'rf2o',   x: 566,  y: 30,  w: 180, h: 78,  title: 'rf2o_laser_odometry',
+      lines: ['scan matching', 'tf odom \u2192 base_link'], tone: 'plain' },
+    { id: 'slam',   x: 566,  y: 136, w: 180, h: 78,  title: 'slam_toolbox',
+      lines: ['async mapping', 'tf map \u2192 odom'], tone: 'plain' },
+    { id: 'detect', x: 566,  y: 242, w: 180, h: 78,  title: 'person_detector',
+      lines: ['SSD-Lite on LiteRT', 'RGB-D \u2192 map pins'], tone: 'accent' },
+    { id: 'vio',    x: 876,  y: 30,  w: 170, h: 78,  title: 'vio_to_ardupilot',
+      lines: ['odom \u2192 MAVLink', 'vision estimate'], tone: 'plain' },
+    { id: 'front',  x: 876,  y: 186, w: 170, h: 78,  title: 'frontier_exploration',
+      lines: ['picks the frontier', 'flies the search'], tone: 'accent' },
+    { id: 'ap',     x: 1176, y: 140, w: 148, h: 112, title: 'ArduPilot SITL',
+      lines: ['EK3 on ext nav', 'arm / mode / vel'], tone: 'ok' }
+  ];
+
+  var EDGES = [
+    { from: 'gz',     to: 'bridge', label: ['gz transport'] },
+    { from: 'bridge', to: 'rf2o',   label: ['/scan'] },
+    { from: 'bridge', to: 'slam',   label: ['/scan'] },
+    { from: 'bridge', to: 'detect', label: ['/camera/*'] },
+    { from: 'rf2o',   to: 'vio',    label: ['/odom'] },
+    { from: 'slam',   to: 'front',  label: ['/map'] },
+    { from: 'detect', to: 'front',  label: ['/person_map_pins'] },
+    { from: 'vio',    to: 'ap',     label: ['MAVLink', 'udp 14550'] },
+    { from: 'front',  to: 'ap',     label: ['ap/cmd_vel', 'over DDS'] },
+    { from: 'ap',     to: 'gz',     label: ['servo out, state back \u2014 udp 9002'], route: 'under' }
+  ];
+
+  function drawFlow() {
+    var svg = document.getElementById('flow');
+    if (!svg) { return; }
+
+    var byId = {};
+    BOXES.forEach(function (b) { byId[b.id] = b; });
+
+    // Spread the exit and entry points of shared endpoints down the box edge.
+    var outCount = {}, inCount = {}, outSeen = {}, inSeen = {};
+    EDGES.forEach(function (e) {
+      if (e.route === 'under') { return; }
+      outCount[e.from] = (outCount[e.from] || 0) + 1;
+      inCount[e.to] = (inCount[e.to] || 0) + 1;
+    });
+
+    function port(box, index, total) {
+      return box.y + box.h * (index + 1) / (total + 1);
+    }
+
+    var defs = el('defs', {});
+    [['line', 'var(--line-strong)'], ['accent', 'var(--accent)']].forEach(function (pair) {
+      var marker = el('marker', {
+        id: 'arrow-' + pair[0], viewBox: '0 0 10 10', refX: '9', refY: '5',
+        markerWidth: '7', markerHeight: '7', orient: 'auto-start-reverse'
+      });
+      marker.appendChild(el('path', { d: 'M 0 1 L 9 5 L 0 9 z', fill: pair[1] }));
+      defs.appendChild(marker);
+    });
+    svg.appendChild(defs);
+
+    var edgeLayer = el('g', {});
+    EDGES.forEach(function (e) {
+      var a = byId[e.from], b = byId[e.to];
+      var under = e.route === 'under';
+      var d, labelX, labelY, anchor;
+
+      if (under) {
+        var busY = 388;
+        d = 'M ' + (a.x + a.w / 2) + ' ' + (a.y + a.h) +
+            ' V ' + busY + ' H ' + (a.x > b.x ? b.x + b.w / 2 : b.x + b.w / 2) +
+            ' V ' + (b.y + b.h);
+        labelX = (a.x + a.w / 2 + b.x + b.w / 2) / 2; labelY = busY - 8; anchor = 'middle';
+      } else {
+        outSeen[e.from] = (outSeen[e.from] || 0);
+        inSeen[e.to] = (inSeen[e.to] || 0);
+        var y1 = port(a, outSeen[e.from], outCount[e.from]);
+        var y2 = port(b, inSeen[e.to], inCount[e.to]);
+        outSeen[e.from]++; inSeen[e.to]++;
+
+        var x1 = a.x + a.w, x2 = b.x;
+        if (Math.abs(y1 - y2) < 0.5) {
+          // Straight run: the label sits centred in the gap.
+          d = 'M ' + x1 + ' ' + y1 + ' H ' + x2;
+          labelX = (x1 + x2) / 2; labelY = y1 - 8; anchor = 'middle';
+        } else {
+          // Turn early, then label the long straight run into the target, so the
+          // vertical segment never crosses its own text.
+          var mid = x1 + (x2 - x1) * 0.16;
+          d = 'M ' + x1 + ' ' + y1 + ' H ' + mid + ' V ' + y2 + ' H ' + x2;
+          labelX = x2 - 16; labelY = y2 - 9; anchor = 'end';
+        }
+      }
+
+      edgeLayer.appendChild(el('path', {
+        d: d, fill: 'none',
+        stroke: under ? 'var(--accent)' : 'var(--line-strong)',
+        'stroke-width': 1.4,
+        'marker-end': under ? 'url(#arrow-accent)' : 'url(#arrow-line)'
+      }));
+
+      // Stack multi-line labels upwards so no line lands on the path itself.
+      labelY -= (e.label.length - 1) * 11;
+      e.label.forEach(function (line, i) {
+        var t = el('text', {
+          x: labelX, y: labelY + i * 11, 'text-anchor': anchor,
+          'font-family': 'IBM Plex Mono, monospace', 'font-size': 9.5,
+          fill: under ? 'var(--accent)' : 'var(--muted)'
+        });
+        t.textContent = line;
+        edgeLayer.appendChild(t);
+      });
+    });
+    svg.appendChild(edgeLayer);
+
+    var boxLayer = el('g', {});
+    BOXES.forEach(function (b) {
+      var fill = b.tone === 'muted' ? 'var(--surface-2)' : 'var(--surface)';
+      var stroke = 'var(--line-strong)';
+      if (b.tone === 'accent') { stroke = 'var(--accent)'; }
+      if (b.tone === 'ok') { stroke = 'var(--ok)'; }
+
+      boxLayer.appendChild(el('rect', {
+        x: b.x, y: b.y, width: b.w, height: b.h, rx: 3,
+        fill: fill, stroke: stroke, 'stroke-width': 1.2
+      }));
+
+      var title = el('text', {
+        x: b.x + 12, y: b.y + 25,
+        'font-family': 'IBM Plex Sans Condensed, sans-serif', 'font-size': 14.5,
+        'font-weight': '600', fill: 'var(--ink)'
+      });
+      title.textContent = b.title;
+      boxLayer.appendChild(title);
+
+      b.lines.forEach(function (line, i) {
+        var t = el('text', {
+          x: b.x + 12, y: b.y + 45 + i * 15,
+          'font-family': 'IBM Plex Mono, monospace', 'font-size': 10.5,
+          fill: 'var(--muted)'
+        });
+        t.textContent = line;
+        boxLayer.appendChild(t);
+      });
+    });
+    svg.appendChild(boxLayer);
+  }
+
+  // ----------------------------------------------------------------- wire up
+  drawMaze();
+  drawFlow();
+  showCoords('S1', MAZE.survivors[0], 'Rescue Randy, static');
+
+  var ringToggle = document.getElementById('ring-toggle');
+  if (ringToggle) {
+    ringToggle.addEventListener('change', function () {
+      var rings = document.getElementById('rings');
+      if (rings) { rings.setAttribute('opacity', ringToggle.checked ? '1' : '0'); }
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (button) {
+    button.addEventListener('click', function () {
+      var pre = button.parentNode.querySelector('pre');
+      if (!pre) { return; }
+      // Strip the shell prompts and inline comments we render as hints.
+      var text = Array.prototype.map.call(pre.childNodes, function (n) {
+        if (n.nodeType === 1 && n.classList.contains('prompt')) { return ''; }
+        return n.textContent;
+      }).join('').replace(/\n{2,}/g, '\n').trim();
+
+      function done() {
+        button.textContent = 'Copied';
+        button.setAttribute('data-done', '1');
+        setTimeout(function () {
+          button.textContent = 'Copy';
+          button.removeAttribute('data-done');
+        }, 1600);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { button.textContent = 'Select it'; });
+      } else {
+        button.textContent = 'Select it';
+      }
+    });
+  });
+</script>

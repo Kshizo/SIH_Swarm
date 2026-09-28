@@ -14,3 +14,7 @@ swarm_ws/src/rf2o_laser_odometry/
 swarm_ws/eeprom.bin
 swarm_ws/terrain/
 swarm_ws/logs/
+
+# Run artefacts: a single mission recording is ~90 MB. A compressed demo clip
+# lives in docs/video/ instead.
+swarm_ws/sim/logs/

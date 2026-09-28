@@ -107,8 +107,29 @@ scoring ranks them last, and the survivor's own body reads as a narrowed passage
 to the lidar — the drone flagged the spot as a hazard without ever confirming the
 person. This is reproducible, understood, and on the list to fix.
 
-Raw logs, the merged report (`survivors.json`) and the full video for every run
-are kept under `swarm_ws/sim/logs/<timestamp>/`.
+### See it run
+
+* **[docs/video/mission-demo.mp4](docs/video/mission-demo.mp4)** &mdash; the full
+  mission, 3&times; speed. Six panels: the overhead view, both drones' cameras with
+  the detector overlay, and both SLAM maps filling in with survivor pins and
+  hazard markers as they are found.
+* **[docs/index.html](docs/index.html)** &mdash; an interactive page with the plan
+  view of the world (click a marker for its coordinates), the node graph, the
+  endpoint table and the bringup steps. Open it in a browser, or serve the
+  `docs/` folder with GitHub Pages.
+* **[docs/survivors.json](docs/survivors.json)** &mdash; the machine-readable
+  report the ground station writes at the end of every mission.
+
+The recording is made from the ROS graph itself, not by screen capture, so it
+runs headless on any machine:
+
+```bash
+./sim/run_swarm.sh --record run.mp4
+```
+
+Raw logs, the merged report and the uncompressed video for every run are kept
+under `swarm_ws/sim/logs/<timestamp>/`. Those are not committed &mdash; a single
+mission recording is around 90 MB.
 
 ---
 
