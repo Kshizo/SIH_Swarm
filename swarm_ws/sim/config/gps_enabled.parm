@@ -1,0 +1,27 @@
+# GPS-enabled navigation, for the half of the mission that happens outdoors.
+#
+# The same airframe, the same ROS 2 graph, the same detector. Only the EKF's
+# position source changes: satellites instead of lidar scan matching. Nothing
+# downstream is aware of the difference, which is the point - a drone that
+# loses its fix on entering a structure keeps flying on the laser.
+GPS1_TYPE 1
+GPS2_TYPE 0
+SIM_GPS1_TYPE 1
+SIM_GPS2_TYPE 0
+AHRS_EKF_TYPE 3
+# Source set 1: satellites for position and velocity, baro for height.
+EK3_SRC1_POSXY 3
+EK3_SRC1_VELXY 3
+EK3_SRC1_POSZ 1
+EK3_SRC1_VELZ 3
+EK3_SRC1_YAW 1
+# Source set 2 keeps the GPS-denied configuration, so EK3_SRCn_OPTIONS or a
+# transmitter switch can fall back to vision without a reboot.
+EK3_SRC2_POSXY 6
+EK3_SRC2_VELXY 6
+EK3_SRC2_POSZ 1
+EK3_SRC2_VELZ 0
+EK3_SRC2_YAW 6
+FRAME_CLASS 1
+FRAME_TYPE 1
+VISO_TYPE 1

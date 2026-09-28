@@ -8,6 +8,7 @@
 #   ./sim/run_swarm.sh --headless       # no Gazebo GUI
 #   ./sim/run_swarm.sh --no-stack       # sim + autopilots only
 #   ./sim/run_swarm.sh --record out.mp4 # also film the mission (see tools/record_mission.py)
+#   ./sim/run_swarm.sh --gps            # fly on satellites instead of lidar odometry
 #
 # Everything is logged to sim/logs/<timestamp>/ and torn down on Ctrl-C.
 set -uo pipefail
@@ -23,6 +24,7 @@ DRONES=2
 HEADLESS=0
 RUN_STACK=1
 RECORD=""
+NAV_PARAMS="$WS_DIR/src/gps_denied.parm"
 WORLD="$SIM_DIR/worlds/maze_survivors.sdf"
 
 while [[ $# -gt 0 ]]; do
@@ -31,6 +33,7 @@ while [[ $# -gt 0 ]]; do
     --headless) HEADLESS=1; shift ;;
     --no-stack) RUN_STACK=0; shift ;;
     --record)   RECORD="${2:-mission.mp4}"; shift 2 ;;
+    --gps)      NAV_PARAMS="$SIM_DIR/config/gps_enabled.parm"; shift ;;
     --world)    WORLD="$2"; shift 2 ;;
     -h|--help)  sed -n '2,12p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
@@ -147,7 +150,7 @@ for (( d=1; d<=DRONES; d++ )); do
       --model JSON \
       --serial0='udpclient:127.0.0.1:$mavlink_port' \
       --serial1='udpclient:127.0.0.1:$((mavlink_port + 1))' \
-      --defaults '$ARDUPILOT/Tools/autotest/default_params/copter.parm,$ARDUPILOT/Tools/autotest/default_params/gazebo-iris.parm,$WS_DIR/src/gps_denied.parm,$SIM_DIR/config/drone$d.parm' \
+      --defaults '$ARDUPILOT/Tools/autotest/default_params/copter.parm,$ARDUPILOT/Tools/autotest/default_params/gazebo-iris.parm,$NAV_PARAMS,$SIM_DIR/config/drone$d.parm' \
       --home '-35.363262,149.165237,584,$yaw' \
       -I$instance"
 done
@@ -199,6 +202,7 @@ if [[ "$RUN_STACK" == "1" && "$DRONES" == "2" ]]; then
       --out '$log_dir/survivors.json'"
 fi
 
+note "navigation: $(basename "$NAV_PARAMS")"
 note "running -- Ctrl-C to stop"
 note "  RViz:      ROS_DOMAIN_ID=1 rviz2"
 note "  MAVProxy:  mavproxy.py --master=udpin:127.0.0.1:14551   # drone 1 (drone 2: 14561)"

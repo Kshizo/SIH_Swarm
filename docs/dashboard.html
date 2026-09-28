@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SIH Swarm — Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground:#F1F3F0; --surface:#FFF; --surface-2:#E9ECE8; --ink:#161A17;
+    --muted:#5E6662; --line:#D8DDD8; --line-strong:#BCC4BC;
+    --p1:#A83A2E; --p1-soft:#F7E3E0; --p2:#A05E07; --p2-soft:#F8E9D4;
+    --p3:#1C6E5E; --p3-soft:#DCEDE8; --wall:#C3C8C0;
+    --display:"IBM Plex Sans Condensed",Arial,sans-serif;
+    --body:"IBM Plex Sans",Arial,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ground:#0F1211; --surface:#171B19; --surface-2:#1E2321; --ink:#E7EBE7;
+    --muted:#97A09A; --line:#282E2B; --line-strong:#3A423E;
+    --p1:#E57264; --p1-soft:#331916; --p2:#EFA544; --p2-soft:#322311;
+    --p3:#52C0A8; --p3-soft:#112A25; --wall:#333A36;
+  } }
+  :root[data-theme="dark"] {
+    --ground:#0F1211; --surface:#171B19; --surface-2:#1E2321; --ink:#E7EBE7;
+    --muted:#97A09A; --line:#282E2B; --line-strong:#3A423E;
+    --p1:#E57264; --p1-soft:#331916; --p2:#EFA544; --p2-soft:#322311;
+    --p3:#52C0A8; --p3-soft:#112A25; --wall:#333A36;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);
+       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .page{max-width:1140px;margin:0 auto;padding-inline:20px;padding-block:32px 64px;
+        display:flex;flex-direction:column;gap:28px}
+  h1,h2{font-family:var(--display);margin:0;line-height:1.15}
+  h1{font-size:2.25rem}
+  h2{font-size:1.3rem}
+  p{margin:0}
+  .eyebrow{font-family:var(--mono);font-size:.6875rem;letter-spacing:.12em;
+           text-transform:uppercase;color:var(--muted)}
+  code{font-family:var(--mono);font-size:.85em}
+
+  .tally{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
+         background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .tally div{background:var(--surface);padding:13px 15px;display:flex;flex-direction:column;gap:2px}
+  .tally .n{font-family:var(--display);font-size:1.7rem;font-weight:600;line-height:1.05;
+            font-variant-numeric:tabular-nums}
+  .tally .n span{font-size:.8rem;color:var(--muted);font-weight:500}
+  .tally .k{font-family:var(--mono);font-size:.6875rem;letter-spacing:.07em;
+            text-transform:uppercase;color:var(--muted)}
+
+  .split{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:24px;align-items:start}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:4px}
+  .panel-head{padding:14px 18px;border-bottom:1px solid var(--line);
+              display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .panel-body{padding:18px}
+  svg{display:block;width:100%;height:auto}
+
+  .card{border-left:4px solid var(--kind);padding:14px 16px;border-bottom:1px solid var(--line);
+        display:flex;flex-direction:column;gap:7px;cursor:pointer}
+  .card:last-child{border-bottom:0}
+  .card.p1{--kind:var(--p1)} .card.p2{--kind:var(--p2)} .card.p3{--kind:var(--p3)}
+  .card.active{background:var(--surface-2)}
+  .card-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:.625rem;letter-spacing:.07em;text-transform:uppercase;
+        padding:2px 7px;border-radius:2px}
+  .p1 .pill{background:var(--p1-soft);color:var(--p1)}
+  .p2 .pill{background:var(--p2-soft);color:var(--p2)}
+  .p3 .pill{background:var(--p3-soft);color:var(--p3)}
+  .card h3{font-family:var(--body);font-size:.95rem;font-weight:600;margin:0}
+  .coords{font-family:var(--mono);font-size:.8rem;color:var(--ink);
+          font-variant-numeric:tabular-nums;word-break:break-all}
+  .note{font-size:.82rem;color:var(--muted)}
+
+  .legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 18px;border-top:1px solid var(--line);
+          font-size:.8rem;color:var(--muted)}
+  .legend span.key{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;
+       border-bottom:10px solid var(--p2);display:inline-block}
+
+  footer{border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:.8rem}
+  @media (max-width:900px){ .split{grid-template-columns:minmax(0,1fr)} }
+  @media (max-width:560px){ .tally{grid-template-columns:repeat(2,minmax(0,1fr))} h1{font-size:1.75rem} }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header style="display:flex;flex-direction:column;gap:12px">
+    <p class="eyebrow" id="eyebrow">Command centre</p>
+    <h1>Mission report</h1>
+    <p class="note" style="max-width:66ch">
+      Generated on board and on the ground, with no network connection at any
+      point. Coordinates share the autopilot's own EKF origin, so what a rescue
+      team receives is the frame the aircraft flew in.
+    </p>
+    <div class="tally" id="tally"></div>
+  </header>
+
+  <div class="split">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Disaster map</h2>
+        <p class="note">survivors, hazards and the building as mapped</p>
+      </div>
+      <div class="panel-body"><svg id="map" viewBox="-15 -15 30 30" role="img"
+        aria-label="Plan of the searched building with survivor and hazard positions"></svg></div>
+      <div class="legend">
+        <span class="key"><span class="dot" style="background:var(--p1)"></span> Priority 1</span>
+        <span class="key"><span class="dot" style="background:var(--p2)"></span> Priority 2</span>
+        <span class="key"><span class="dot" style="background:var(--p3)"></span> Priority 3</span>
+        <span class="key"><span class="tri"></span> Narrowed passage</span>
+        <span class="key"><span class="tri" style="border-bottom-color:var(--p1)"></span> No route through</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Dispatch order</h2>
+        <p class="note">access first, then confidence</p>
+      </div>
+      <div id="list"></div>
+    </section>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+var DATA = {"mission":"20260928-034222","datum":{"lat":-35.363262,"lon":149.165237,"alt":584},"expected":4,"found":3,"elapsed_s":1041.1,"per_drone_raw_pins":{"1":1,"2":3},"ranked":[{"survivor":{"x":-4.71,"y":4.71,"seen_by":[1,2],"pins":2,"lat":-35.36321968935012,"lon":149.16518511686263},"priority":1,"reason":"access obstructed","nearest":{"kind":"unreachable","distance":1.5},"blocking":[{"kind":"unreachable","distance":1.5},{"kind":"constriction","distance":1.9},{"kind":"constriction","distance":3.8}]},{"survivor":{"x":10.1,"y":-9.56,"seen_by":[2],"pins":1,"lat":-35.36334787894116,"lon":149.1653482568338},"priority":1,"reason":"access obstructed","nearest":{"kind":"unreachable","distance":0.2},"blocking":[{"kind":"unreachable","distance":0.2},{"kind":"constriction","distance":0.6}]},{"survivor":{"x":-0.09,"y":-9.55,"seen_by":[2],"pins":1,"lat":-35.36334778910963,"lon":149.16523600860245},"priority":2,"reason":"single-drone detection, needs verification","nearest":{"kind":"unreachable","distance":9.4},"blocking":[]}],"hazards":[{"kind":"constriction","x":-8.79,"y":-1.07,"seen_by":[1],"lat":-35.36327161197354,"lon":149.16514017350798},{"kind":"constriction","x":-5.44,"y":1.03,"seen_by":[1],"lat":-35.363252747352576,"lon":149.1651770755271},{"kind":"constriction","x":-10.25,"y":3.1,"seen_by":[1],"lat":-35.36323415222619,"lon":149.16512409083697},{"kind":"constriction","x":-3.29,"y":3.48,"seen_by":[1],"lat":-35.36323073862811,"lon":149.16520075891253},{"kind":"unreachable","x":-9.05,"y":2.33,"seen_by":[1],"lat":-35.36324106925388,"lon":149.16513730947068},{"kind":"unreachable","x":-3.25,"y":4.88,"seen_by":[1],"lat":-35.36321816221413,"lon":149.16520119953367},{"kind":"constriction","x":2.35,"y":9.28,"seen_by":[2],"lat":-35.36317863634163,"lon":149.16526288649104},{"kind":"constriction","x":-9.92,"y":7.16,"seen_by":[2],"lat":-35.36319768062565,"lon":149.16512772596124},{"kind":"constriction","x":-0.67,"y":0.43,"seen_by":[2],"lat":-35.36325813724428,"lon":149.16522961959618},{"kind":"constriction","x":9.28,"y":-2.42,"seen_by":[2],"lat":-35.36328373922987,"lon":149.16533922410076},{"kind":"constriction","x":10.1,"y":-8.97,"seen_by":[2],"lat":-35.36334257888098,"lon":149.1653482568338},{"kind":"unreachable","x":8.1,"y":-4.87,"seen_by":[2],"lat":-35.363305747954335,"lon":149.16532622577762},{"kind":"unreachable","x":10.18,"y":-9.42,"seen_by":[2],"lat":-35.36334662129976,"lon":149.16534913807607}],"walls":[[0.0,-12.0,26.4,2.4],[-12.0,-9.6,2.4,2.4],[-7.2,-9.6,2.4,2.4],[12.0,-9.6,2.4,2.4],[-12.0,-7.2,2.4,2.4],[-4.8,-7.2,7.2,2.4],[7.2,-7.2,12.0,2.4],[-12.0,-4.8,2.4,2.4],[-2.4,-4.8,2.4,2.4],[12.0,-4.8,2.4,2.4],[-12.0,-2.4,2.4,2.4],[-7.2,-2.4,2.4,2.4],[-2.4,-2.4,2.4,2.4],[4.8,-2.4,7.2,2.4],[12.0,-2.4,2.4,2.4],[-12.0,0.0,2.4,2.4],[-7.2,0.0,2.4,2.4],[-2.4,0.0,2.4,2.4],[2.4,0.0,2.4,2.4],[12.0,0.0,2.4,2.4],[-12.0,2.4,2.4,2.4],[-7.2,2.4,2.4,2.4],[0.0,2.4,7.2,2.4],[7.2,2.4,2.4,2.4],[12.0,2.4,2.4,2.4],[-12.0,4.8,2.4,2.4],[-7.2,4.8,2.4,2.4],[7.2,4.8,2.4,2.4],[12.0,4.8,2.4,2.4],[-12.0,7.2,2.4,2.4],[-4.8,7.2,7.2,2.4],[4.8,7.2,7.2,2.4],[12.0,7.2,2.4,2.4],[-12.0,9.6,2.4,2.4],[12.0,9.6,2.4,2.4],[0.0,12.0,26.4,2.4]]};
+
+var SVG = 'http://www.w3.org/2000/svg';
+function el(name, attrs) {
+  var node = document.createElementNS(SVG, name);
+  for (var k in attrs) node.setAttribute(k, attrs[k]);
+  return node;
+}
+function priorityVar(p) { return 'var(--p' + p + ')'; }
+
+function renderTally() {
+  var raw = 0;
+  for (var k in DATA.per_drone_raw_pins) raw += DATA.per_drone_raw_pins[k];
+  var drones = Object.keys(DATA.per_drone_raw_pins).length || 2;
+  var urgent = DATA.ranked.filter(function (r) { return r.priority === 1; }).length;
+  var cells = [
+    [DATA.found + '<span> of ' + DATA.expected + '</span>', 'Survivors located'],
+    [urgent + '<span> of ' + DATA.found + '</span>', 'Access obstructed'],
+    [String(DATA.hazards.length), 'Hazards mapped'],
+    [String(drones) + '<span> · no link</span>', 'Drones deployed']
+  ];
+  document.getElementById('tally').innerHTML = cells.map(function (c) {
+    return '<div><span class="n">' + c[0] + '</span><span class="k">' + c[1] + '</span></div>';
+  }).join('');
+  document.getElementById('eyebrow').textContent =
+    'Command centre · ' + DATA.mission + ' · datum ' +
+    DATA.datum.lat.toFixed(6) + ', ' + DATA.datum.lon.toFixed(6);
+  document.getElementById('footer').textContent =
+    raw + ' raw detections from ' + drones + ' drones reconciled into ' + DATA.found +
+    ' unique survivors. Priority 1 means a mapped hazard lies within 4 m of the ' +
+    'casualty, so the way in is obstructed; priority 2 means only one drone saw them.';
+}
+
+function renderMap() {
+  var svg = document.getElementById('map');
+  svg.innerHTML = '';
+
+  DATA.walls.forEach(function (w) {
+    svg.appendChild(el('rect', {
+      x: w[0] - w[2] / 2, y: -w[1] - w[3] / 2, width: w[2], height: w[3],
+      fill: 'var(--wall)'
+    }));
+  });
+
+  DATA.hazards.forEach(function (h) {
+    var colour = h.kind === 'unreachable' ? 'var(--p1)' : 'var(--p2)';
+    var x = h.x, y = -h.y, s = 0.55;
+    svg.appendChild(el('path', {
+      d: 'M ' + x + ' ' + (y - s) + ' L ' + (x + s) + ' ' + (y + s * 0.8) +
+         ' L ' + (x - s) + ' ' + (y + s * 0.8) + ' Z',
+      fill: colour, 'fill-opacity': '0.85'
+    }));
+  });
+
+  DATA.ranked.forEach(function (entry, i) {
+    var s = entry.survivor, colour = priorityVar(entry.priority);
+    var g = el('g', { class: 'marker', tabindex: '0', role: 'button', 'data-index': i });
+    g.setAttribute('aria-label', 'Survivor ' + (i + 1) + ', priority ' + entry.priority);
+    g.appendChild(el('circle', { cx: s.x, cy: -s.y, r: 1.15, fill: colour, 'fill-opacity': '0.2' }));
+    g.appendChild(el('circle', { cx: s.x, cy: -s.y, r: 0.55, fill: colour }));
+    var label = el('text', {
+      x: s.x, y: -s.y + 2.2, 'text-anchor': 'middle',
+      'font-family': 'IBM Plex Mono, monospace', 'font-size': 0.95, fill: colour
+    });
+    label.textContent = String(i + 1);
+    g.appendChild(label);
+    g.addEventListener('click', function () { select(i); });
+    g.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(i); }
+    });
+    svg.appendChild(g);
+  });
+}
+
+function renderList() {
+  var list = document.getElementById('list');
+  list.innerHTML = '';
+  DATA.ranked.forEach(function (entry, i) {
+    var s = entry.survivor;
+    var card = document.createElement('article');
+    card.className = 'card p' + entry.priority;
+    card.setAttribute('data-index', i);
+
+    var access = entry.blocking.length
+      ? entry.blocking.map(function (b) {
+          return b.kind.replace('unreachable', 'no route through') + ' ' + b.distance + ' m away';
+        }).join(' · ')
+      : (entry.nearest
+          ? 'clear — nearest ' + entry.nearest.kind.replace('unreachable', 'blocked route') +
+            ' ' + entry.nearest.distance + ' m away'
+          : 'clear');
+
+    card.innerHTML =
+      '<div class="card-head"><span class="pill">Priority ' + entry.priority + '</span>' +
+      '<h3>Survivor ' + (i + 1) + '</h3></div>' +
+      '<p class="coords">' + s.lat.toFixed(7) + ', ' + s.lon.toFixed(7) + '</p>' +
+      '<p class="note">' + entry.reason + '</p>' +
+      '<p class="note">Seen by ' + s.seen_by.map(function (d) { return 'drone ' + d; }).join(' and ') +
+      ' · ' + s.pins + ' detection' + (s.pins === 1 ? '' : 's') + '</p>' +
+      '<p class="note">Access: ' + access + '</p>';
+    card.addEventListener('click', function () { select(i); });
+    list.appendChild(card);
+  });
+}
+
+function select(index) {
+  Array.prototype.forEach.call(document.querySelectorAll('.card'), function (c) {
+    c.classList.toggle('active', Number(c.getAttribute('data-index')) === index);
+  });
+  var card = document.querySelector('.card[data-index="' + index + '"]');
+  if (card) card.scrollIntoView({ block: 'nearest' });
+}
+
+if (DATA) { renderTally(); renderMap(); renderList(); }
+</script>
+</body>
+</html>

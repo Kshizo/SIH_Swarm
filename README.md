@@ -29,6 +29,9 @@ real ROS 2 nodes against simulated sensors.
 | **Finds people** | An SSD-Lite detector runs on board. Depth at the bounding box gives range; the detection is projected into the map, confirmed across frames, and pinned as a coordinate. |
 | **Finds hazards** | Passages narrowed by debris, and routes with no way through, are derived from the same map — no extra sensor, no second model. |
 | **Splits the building** | Two drones claim opposite sectors before entry and a ground station merges their findings afterwards. Nothing passes between them in flight. |
+| **Reports in lat/lon** | Survivors and hazards are geo-tagged against the same datum the autopilot uses as its EKF origin, so the coordinates mean something outside the robot. |
+| **Ranks for dispatch** | A situation report orders casualties by whether the way in is obstructed, then by how confident the detection is, and a dashboard shows it on the map. |
+| **Flies with or without GPS** | `--gps` swaps the EKF's position source to satellites. Nothing downstream changes: a drone that loses its fix on entering a structure keeps flying on the laser. |
 
 ---
 
@@ -117,8 +120,13 @@ person. This is reproducible, understood, and on the list to fix.
   view of the world (click a marker for its coordinates), the node graph, the
   endpoint table and the bringup steps. Open it in a browser, or serve the
   `docs/` folder with GitHub Pages.
+* **[docs/dashboard.html](docs/dashboard.html)** &mdash; the command-centre view:
+  every survivor geo-tagged and ranked for dispatch, the hazards that obstruct
+  access, and the building as mapped. Built from the mission report, so it opens
+  from disk with no server.
 * **[docs/survivors.json](docs/survivors.json)** &mdash; the machine-readable
-  report the ground station writes at the end of every mission.
+  report the ground station writes at the end of every mission, alongside a
+  plain-text situation report.
 
 The recording is made from the ROS graph itself, not by screen capture, so it
 runs headless on any machine:
