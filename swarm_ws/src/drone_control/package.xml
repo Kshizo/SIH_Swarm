@@ -3,7 +3,7 @@
 <package format="3">
   <name>drone_control</name>
   <version>0.0.0</version>
-  <description>Keyboard teleop and autonomous control for ArduPilot using native DDS</description>
+  <description>Autonomous frontier search, hazard mapping from the occupancy grid, and the ground station that merges both drones - driving ArduPilot over native DDS.</description>
   <maintainer email="atharv@todo.todo">atharv</maintainer>
   <license>Apache-2.0</license>
 

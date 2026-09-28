@@ -43,14 +43,14 @@ def stamp_seconds(stamp):
     return stamp.sec + stamp.nanosec * 1e-9
 
 
-def planar_transform(transform):
+def planar_transform(transform, max_tilt_rad=math.radians(10.0)):
     quaternion = transform.rotation
     roll = math.atan2(
         2.0 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z),
         1.0 - 2.0 * (quaternion.x ** 2 + quaternion.y ** 2))
     pitch = math.asin(max(-1.0, min(
         1.0, 2.0 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x))))
-    if max(abs(roll), abs(pitch)) > math.radians(10.0):
+    if max(abs(roll), abs(pitch)) > max_tilt_rad:
         raise ValueError('Scan exceeds planar coverage tilt limit')
     return (transform.translation.x, transform.translation.y,
             quaternion_yaw(quaternion))
@@ -334,6 +334,33 @@ class FrontierExploration(Node):
             'coverage_inf_is_clear': True,
             'map_timeout_s': 15.0,
             'tf_timeout_s': 1.0,
+            # A moving multirotor routinely exceeds 10 degrees, which gated the
+            # coverage layer off for most of a flight.
+            'coverage_max_tilt_deg': 10.0,
+            # How far from its launch point this drone will chase a frontier.
+            # The old hard-coded 15 m put half the survivors out of reach in a
+            # 26 m building, and starved the candidate list into an early return.
+            'exploration_radius_m': 15.0,
+            'max_speed_mps': 0.3,
+            # Sector partitioning. count <= 1 disables it entirely; otherwise the
+            # search space is cut into `sector_count` angular wedges about
+            # (sector_origin_x, sector_origin_y) and this drone takes one of them.
+            # The wedges must be defined in a frame every drone agrees on, and
+            # the drones have no such frame: SLAM anchors each one's map at its
+            # own take-off point, so every drone believes it launched from the
+            # origin. The operator closes that gap, being the only party that
+            # knows all the launch poses:
+            #   sector_origin_*       the shared reference point (the building
+            #                         centre, say) in THIS drone's map frame
+            #   sector_yaw_offset_deg this drone's launch heading in the mission
+            #                         frame, which rotates its map bearings onto
+            #                         a common compass
+            # Given those two, index -1 self-assigns correctly again.
+            'sector_count': 1,
+            'sector_index': -1,
+            'sector_origin_x': 0.0,
+            'sector_origin_y': 0.0,
+            'sector_yaw_offset_deg': 0.0,
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -344,6 +371,7 @@ class FrontierExploration(Node):
             'coverage_range_m', 'coverage_min_area_m2',
             'coverage_dwell_s', 'coverage_cooldown_s',
             'coverage_scan_timeout_s', 'map_timeout_s', 'tf_timeout_s',
+            'coverage_max_tilt_deg', 'exploration_radius_m', 'max_speed_mps',
         )
         if any(not math.isfinite(self.settings[name])
                or self.settings[name] <= 0.0 for name in positive):
@@ -352,6 +380,20 @@ class FrontierExploration(Node):
             raise ValueError('coverage_fov_deg must be in (0, 360]')
         if not math.isfinite(self.settings['coverage_yaw_offset_deg']):
             raise ValueError('coverage_yaw_offset_deg must be finite')
+        self.max_tilt_rad = math.radians(self.settings['coverage_max_tilt_deg'])
+        self.exploration_radius = float(self.settings['exploration_radius_m'])
+
+        # Sector state. `sector_relaxed` latches once this drone has exhausted
+        # its own wedge: it then searches everything, so a lost partner means a
+        # slow finish rather than an unsearched half.
+        self.sector_count = max(1, int(self.settings['sector_count']))
+        self.sector_index = int(self.settings['sector_index'])
+        self.sector_origin = (float(self.settings['sector_origin_x']),
+                              float(self.settings['sector_origin_y']))
+        self.sector_yaw_offset = math.radians(
+            float(self.settings['sector_yaw_offset_deg']))
+        self.sector_relaxed = self.sector_count <= 1
+
         self.view_fov = math.radians(self.settings['coverage_fov_deg'])
         self.view_offset = math.radians(
             self.settings['coverage_yaw_offset_deg'])
@@ -374,6 +416,10 @@ class FrontierExploration(Node):
             TwistStamped, 'ap/cmd_vel', 10)
         self.scan_pub = self.create_publisher(
             LaserScan, 'scan', qos_profile_sensor_data)
+        # Frontiers A* could not reach. The hazard mapper reports these as
+        # blocked routes instead of letting them be silently discarded.
+        self.unreachable_pub = self.create_publisher(
+            MarkerArray, 'exploration/unreachable', latched)
 
         self.status_sub = self.create_subscription(
             Status, 'ap/status', self.status_callback, qos_profile_sensor_data)
@@ -426,7 +472,7 @@ class FrontierExploration(Node):
         self.STABILISE_SECONDS = 5.0
         self.stabilise_until = 0.0
         self.takeoff_time = 0.0
-        self.max_speed = 0.3
+        self.max_speed = float(self.settings['max_speed_mps'])
         self.max_yaw_rate = 0.4
         self.FREE_THRESH = 50
         self.OCC_THRESH = 50
@@ -489,7 +535,7 @@ class FrontierExploration(Node):
             # Use current time to avoid dropping scans due to minor TF lag
             transform = self.tf_buffer.lookup_transform(
                 'map', 'base_link', rclpy.time.Time())
-            planar_transform(transform.transform)
+            planar_transform(transform.transform, self.max_tilt_rad)
             self.scan_pub.publish(message)
         except (TransformException, ValueError):
             pass
@@ -545,10 +591,10 @@ class FrontierExploration(Node):
                     self.coverage.frame, scan.header.frame_id, end_time)
                 body_end = self.tf_buffer.lookup_transform(
                     self.coverage.frame, 'base_link', end_time)
-                laser_first = planar_transform(laser.transform)
-                laser_last = planar_transform(laser_end.transform)
-                body_first = planar_transform(body.transform)
-                body_last = planar_transform(body_end.transform)
+                laser_first = planar_transform(laser.transform, self.max_tilt_rad)
+                laser_last = planar_transform(laser_end.transform, self.max_tilt_rad)
+                body_first = planar_transform(body.transform, self.max_tilt_rad)
+                body_last = planar_transform(body_end.transform, self.max_tilt_rad)
             except TransformException:
                 break
             except ValueError:
@@ -717,6 +763,39 @@ class FrontierExploration(Node):
         cv2.floodFill(image, mask, (column, row), 128)
         return image == 128
 
+    def wedge_of(self, map_x, map_y):
+        """Which wedge a point in THIS drone's map frame falls in.
+
+        The bearing is measured in the drone's own map frame, then rotated by
+        its launch heading, which puts every drone's bearings on one compass
+        without any of them exchanging a message.
+        """
+        bearing = math.atan2(map_y - self.sector_origin[1],
+                             map_x - self.sector_origin[0])
+        bearing = (bearing + self.sector_yaw_offset) % (2.0 * math.pi)
+        return int(bearing / (2.0 * math.pi / self.sector_count)) % self.sector_count
+
+    def resolve_sector(self):
+        """Claim the wedge this drone launched into.
+
+        Every drone runs the same arithmetic on the same shared origin, so the
+        partition agrees across the fleet without anyone exchanging a message -
+        which matters, because inside a building the radio link is the first
+        thing to go. Drones entering from different sides land in different
+        wedges; two entering from the same side would claim the same one, and
+        the exhaustion fallback below is what keeps coverage complete if so.
+        """
+        if self.sector_count <= 1 or self.entry_x is None:
+            return
+        if self.sector_index < 0:
+            self.sector_index = self.wedge_of(self.entry_x, self.entry_y)
+            self.get_logger().info(
+                'Claimed sector %d of %d (shared origin %.1f, %.1f in my map '
+                'frame, launch heading %.0f deg)'
+                % (self.sector_index, self.sector_count,
+                   self.sector_origin[0], self.sector_origin[1],
+                   math.degrees(self.sector_yaw_offset)))
+
     def find_frontiers(self):
         if self.latest_map is None:
             return None, []
@@ -765,9 +844,10 @@ class FrontierExploration(Node):
                 info, rows[nearest], columns[nearest])
             world_x, world_y = float(world_x), float(world_y)
             
-            # Dynamic bounding to keep exploration strictly inside 15m of start
+            # Keep exploration inside the configured radius of the start point.
             if self.entry_x is not None:
-                if math.hypot(world_x - self.entry_x, world_y - self.entry_y) > 15.0:
+                if (math.hypot(world_x - self.entry_x, world_y - self.entry_y)
+                        > self.exploration_radius):
                     continue
                 
             distance = math.hypot(world_x - self.current_x, world_y - self.current_y)
@@ -783,8 +863,49 @@ class FrontierExploration(Node):
             candidates.append((score, world_x, world_y))
         if not candidates:
             return None, all_centroids
+
+        # Prefer frontiers inside this drone's own wedge. Falling back to the
+        # whole map when the wedge runs dry is what makes the partition safe:
+        # a drone that loses its partner finishes the building alone, slowly,
+        # instead of landing with half of it unsearched.
+        #
+        # KNOWN LIMITATION: this fall-back latches, and in practice it latches
+        # early - about a minute in, while the map is still small enough that
+        # no frontier happens to fall inside the wedge. From then on both
+        # drones search the whole building. Making it reversible was tried and
+        # made things worse: both drones converged on the same corridor and
+        # collided, because nothing here knows the other drone exists. Fixing
+        # it properly needs peer awareness, not a different latch. See the
+        # project README's honest-status section.
+        if not self.sector_relaxed:
+            mine = [c for c in candidates if self.wedge_of(c[1], c[2]) == self.sector_index]
+            if mine:
+                candidates = mine
+            else:
+                self.sector_relaxed = True
+                self.get_logger().info(
+                    'Sector %d exhausted; searching the rest of the map'
+                    % self.sector_index)
+
         best = max(candidates, key=lambda candidate: candidate[0])
         return (best[1], best[2]), all_centroids
+
+    def publish_unreachable(self):
+        markers = MarkerArray()
+        for index, (x, y) in enumerate(self.blacklisted_frontiers):
+            marker = Marker()
+            marker.header.frame_id = self.coverage.frame or 'map'
+            marker.header.stamp = self.get_clock().now().to_msg()
+            marker.ns = 'unreachable'
+            marker.id = index
+            marker.type = Marker.SPHERE
+            marker.action = Marker.ADD
+            marker.pose.position = Point(x=float(x), y=float(y), z=0.4)
+            marker.pose.orientation.w = 1.0
+            marker.scale.x = marker.scale.y = marker.scale.z = 0.5
+            marker.color = ColorRGBA(r=0.85, g=0.27, b=0.20, a=0.9)
+            markers.markers.append(marker)
+        self.unreachable_pub.publish(markers)
 
     def publish_frontier_grid(self, image, info):
         message = OccupancyGrid()
@@ -919,6 +1040,7 @@ class FrontierExploration(Node):
         elif self.state == 'CLIMBING':
             if now - self.takeoff_time > 10.0 and self.tf_valid:
                 self.entry_x, self.entry_y = self.current_x, self.current_y
+                self.resolve_sector()
                 self.stabilise_until = now + self.STABILISE_SECONDS
                 self.state = 'STABILISE'
         elif self.state == 'STABILISE':
@@ -1000,13 +1122,29 @@ class FrontierExploration(Node):
             info = self.latest_map.info
             obstacles = (self.coverage.data >= self.OCC_THRESH).astype(np.uint8) * 255
             
-            # Inject survivor obstacles
+            # Survivor no-fly discs: do not fly over a casualty. These are kept
+            # separate from the mapped walls, because the disc under the drone
+            # has to be releasable and a wall never does.
+            survivor_mask = np.zeros_like(obstacles)
             for px, py in self.survivor_locations:
                 r, c = ViewCoverage.grid_coordinates(info, px, py)
                 r, c = int(r), int(c)
                 if 0 <= r < info.height and 0 <= c < info.width:
-                    cv2.circle(obstacles, (c, r), int(0.50 / info.resolution), 255, -1)
-                    
+                    cv2.circle(survivor_mask, (c, r), int(0.50 / info.resolution), 255, -1)
+
+            # Confirming a survivor turns the ground under the drone into a
+            # no-fly disc. If the drone is standing in it, its own start cell
+            # fails the clearance test and every A* call fails - it pins one
+            # casualty, parks on top of it and can never plan again. Release the
+            # disc it is standing in; the mapped walls are left untouched.
+            here_rows, here_columns = ViewCoverage.grid_coordinates(
+                info, self.current_x, self.current_y)
+            here_row = max(0, min(info.height - 1, int(here_rows)))
+            here_column = max(0, min(info.width - 1, int(here_columns)))
+            cv2.circle(survivor_mask, (here_column, here_row),
+                       int(0.70 / info.resolution), 0, -1)
+            obstacles = cv2.bitwise_or(obstacles, survivor_mask)
+
             distance_transform = cv2.distanceTransform(
                 cv2.bitwise_not(obstacles), cv2.DIST_L2, 5)
             start_rows, start_columns = ViewCoverage.grid_coordinates(
@@ -1024,6 +1162,7 @@ class FrontierExploration(Node):
                 self.cached_world_path = []
                 if self.state == 'EXPLORE':
                     self.blacklisted_frontiers.append((self.target_x, self.target_y))
+                    self.publish_unreachable()
                     self.target_x = self.target_y = None
                 self.publish_velocity(0.0, 0.0, 0.0)
                 self.get_logger().warning('A* failed; holding or selecting another frontier',

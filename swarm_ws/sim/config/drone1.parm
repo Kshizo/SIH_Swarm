@@ -1,0 +1,9 @@
+# Drone 1 -- SITL instance 0
+# MAVLink (VISION_POSITION_ESTIMATE from vio_to_ardupilot) on udp 14550,
+# native DDS (ap/... topics and services) on ROS_DOMAIN_ID 1 via the
+# Micro-XRCE-DDS agent listening on udp 2019.
+SYSID_THISMAV 1
+DDS_ENABLE 1
+DDS_UDP_PORT 2019
+DDS_DOMAIN_ID 1
+DDS_USE_NS 0

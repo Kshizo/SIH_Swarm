@@ -1,4 +1,0 @@
-[console_scripts]
-optical_flow = drone_mapping.optical_flow:main
-pose_to_tf = drone_mapping.pose_to_tf:main
-vio_to_ardupilot = drone_mapping.vio_to_ardupilot:main

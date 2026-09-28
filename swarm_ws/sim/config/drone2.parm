@@ -1,0 +1,7 @@
+# Drone 2 -- SITL instance 1
+# MAVLink on udp 14560, DDS on ROS_DOMAIN_ID 2 via the agent on udp 2020.
+SYSID_THISMAV 2
+DDS_ENABLE 1
+DDS_UDP_PORT 2020
+DDS_DOMAIN_ID 2
+DDS_USE_NS 0

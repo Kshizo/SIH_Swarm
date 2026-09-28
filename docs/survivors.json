@@ -1,0 +1,143 @@
+{
+  "expected": 4,
+  "found": 3,
+  "elapsed_s": 1041.1,
+  "merge_radius_m": 3.0,
+  "survivors": [
+    {
+      "x": -4.71,
+      "y": 4.71,
+      "seen_by": [
+        1,
+        2
+      ],
+      "pins": 2
+    },
+    {
+      "x": -0.09,
+      "y": -9.55,
+      "seen_by": [
+        2
+      ],
+      "pins": 1
+    },
+    {
+      "x": 10.1,
+      "y": -9.56,
+      "seen_by": [
+        2
+      ],
+      "pins": 1
+    }
+  ],
+  "per_drone_raw_pins": {
+    "1": 1,
+    "2": 3
+  },
+  "hazards": [
+    {
+      "kind": "constriction",
+      "x": -8.79,
+      "y": -1.07,
+      "seen_by": [
+        1
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": -5.44,
+      "y": 1.03,
+      "seen_by": [
+        1
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": -10.25,
+      "y": 3.1,
+      "seen_by": [
+        1
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": -3.29,
+      "y": 3.48,
+      "seen_by": [
+        1
+      ]
+    },
+    {
+      "kind": "unreachable",
+      "x": -9.05,
+      "y": 2.33,
+      "seen_by": [
+        1
+      ]
+    },
+    {
+      "kind": "unreachable",
+      "x": -3.25,
+      "y": 4.88,
+      "seen_by": [
+        1
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": 2.35,
+      "y": 9.28,
+      "seen_by": [
+        2
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": -9.92,
+      "y": 7.16,
+      "seen_by": [
+        2
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": -0.67,
+      "y": 0.43,
+      "seen_by": [
+        2
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": 9.28,
+      "y": -2.42,
+      "seen_by": [
+        2
+      ]
+    },
+    {
+      "kind": "constriction",
+      "x": 10.1,
+      "y": -8.97,
+      "seen_by": [
+        2
+      ]
+    },
+    {
+      "kind": "unreachable",
+      "x": 8.1,
+      "y": -4.87,
+      "seen_by": [
+        2
+      ]
+    },
+    {
+      "kind": "unreachable",
+      "x": 10.18,
+      "y": -9.42,
+      "seen_by": [
+        2
+      ]
+    }
+  ]
+}

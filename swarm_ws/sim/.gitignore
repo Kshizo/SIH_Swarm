@@ -1,0 +1,7 @@
+# Generated from the installed ardupilot_gazebo model (LGPL-3.0) at setup time.
+models/
+logs/
+
+# Recorded missions are large; keep them out of git.
+mission.mp4
+*.mp4

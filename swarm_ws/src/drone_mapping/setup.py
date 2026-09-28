@@ -18,8 +18,8 @@ setup(
     zip_safe=True,
     maintainer='atharv',
     maintainer_email='atharvprasad6@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Lidar odometry plumbing and the vision-position bridge for GPS-denied flight',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',

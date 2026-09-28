@@ -3,9 +3,9 @@
 <package format="3">
   <name>ssd_lite_ros</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>On-board SSD-Lite person detection on RGB-D, projecting confirmed detections into map coordinates as survivor pins.</description>
   <maintainer email="ojaskanotra@gmail.com">kanot</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>

@@ -1,0 +1,16 @@
+# colcon output - these were committed with CMake caches pointing at another
+# machine, which breaks the build on any other checkout.
+swarm_ws/build/
+swarm_ws/install/
+swarm_ws/log/
+
+__pycache__/
+*.pyc
+
+# Third-party dependency, cloned by setup.sh rather than vendored.
+swarm_ws/src/rf2o_laser_odometry/
+
+# ArduPilot SITL scratch files, written into the workspace at runtime.
+swarm_ws/eeprom.bin
+swarm_ws/terrain/
+swarm_ws/logs/

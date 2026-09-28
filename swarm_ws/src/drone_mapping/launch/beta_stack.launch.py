@@ -33,6 +33,8 @@ def generate_launch_description():
             remappings=[
                 (f'{drone_prefix}/lidar/scan', '/scan'),
                 (f'{drone_prefix}/camera/image', '/camera/image_raw'),
+                # person_detector subscribes to /camera/depth_image
+                (f'{drone_prefix}/camera/depth_image', '/camera/depth_image'),
                 (f'{drone_prefix}/camera/camera_info', '/camera/camera_info')
             ],
             output='screen'
@@ -100,7 +102,52 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'use_sim_time': True,
-                'target_survivor_count': 4
+                # The bridge already publishes the lidar on /scan for SLAM, so the
+                # view-coverage layer reads that instead of a separate raw topic.
+                'coverage_scan_topic': '/scan',
+
+                # The maze is 26 m across; the old 15 m cap put two of the four
+                # survivors out of reach of either drone and starved the frontier
+                # list into an early return.
+                'exploration_radius_m': 40.0,
+                'max_speed_mps': 0.6,
+
+                # A moving multirotor sits well past 10 degrees, which kept the
+                # view-coverage layer suspended for most of a flight.
+                'coverage_max_tilt_deg': 25.0,
+                'coverage_scan_timeout_s': 3.0,
+
+                # Split the building in half about its centre; each drone claims
+                # the wedge it launched into. No message passes between them.
+                #
+                # Each drone's map frame is anchored at its own take-off point,
+                # so the shared reference has to be handed to it. Both drones
+                # start 9.6 m along each axis from the maze centre, and drone 2
+                # enters facing the other way, so in each drone's own map frame
+                # the centre sits at (9.6, 9.6) - the launch heading is what
+                # tells them apart.
+                'sector_count': 2,
+                'sector_index': -1,
+                'sector_origin_x': 9.6,
+                'sector_origin_y': 9.6,
+                'sector_yaw_offset_deg': 0.0 if domain_id == '1' else 180.0
+            }],
+            # The node re-publishes pitch-gated scans; keep them off /scan so they
+            # do not duplicate what the bridge is already feeding SLAM.
+            remappings=[('scan', 'scan_gated')]
+        ),
+
+        # Hazard Mapper - reads the same map the explorer uses
+        Node(
+            package='drone_control',
+            executable='hazard_mapper',
+            name='hazard_mapper',
+            output='screen',
+            parameters=[{
+                'use_sim_time': True,
+                # Corridors here are 2.4 m (1.2 m clearance); debris leaves
+                # 1.8 m (0.9 m), so anything under 1.0 m clearance is debris.
+                'min_clearance_m': 1.0
             }]
         ),
 

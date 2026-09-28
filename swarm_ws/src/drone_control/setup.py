@@ -23,6 +23,8 @@ setup(
             'teleop_node = drone_control.teleop_node:main',
             'autonomous_script = drone_control.autonomous_script:main',
             'frontier_exploration = drone_control.frontier_exploration:main',
+            'ground_station = drone_control.ground_station:main',
+            'hazard_mapper = drone_control.hazard_mapper:main',
         ],
     },
 )

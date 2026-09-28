@@ -1,3 +1,0 @@
-[console_scripts]
-camera_publisher = ssd_lite_ros.camera_publisher:main
-person_detector = ssd_lite_ros.person_detector:main

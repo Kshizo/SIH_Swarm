@@ -18,8 +18,8 @@ setup(
     zip_safe=True,
     maintainer='kanot',
     maintainer_email='ojaskanotra@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='On-board SSD-Lite person detection on RGB-D with map-frame survivor pins',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',
